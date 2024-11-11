@@ -54,7 +54,7 @@ BEGIN
         -- construimos el texto de borrado con la variable ciudad y el id
         SET @texto = CONCAT('Borrado lógico de la sucursal en ciudad: ', @ciudad, ' (ID: ', @id, ')');
 
-        -- Llamar al procedimiento que registra el borrado lógico en la tabla Registro
+        -- Llamamos al procedimiento que registra el borrado lógico en la tabla Registro
         EXEC registros.registrarBorrado @texto = @texto, @modulo = @modulo;
     END
 END;
@@ -125,7 +125,7 @@ GO
 -- STORE PROCEDURE PARA HACER BORRADO LOGICO DE EMPLEADO POR LEGAJO
 ---------------------------------------------------------------------------------
 CREATE OR ALTER PROCEDURE supermercado.borrado_logico_empleado
-    @legajo INT, -- borra para el legajo
+    @legajo INT, -- borra por el legajo
     @modulo NVARCHAR(50) = 'empleado'
 AS
 BEGIN
@@ -161,14 +161,14 @@ BEGIN
     SET activo = 0
     WHERE factura = @factura AND tipo_Factura = @tipo_factura;
 
-    -- Si se modificó alguna fila, proceder con el registro en la tabla Registro
+    -- Si se modificó alguna fila,lo registramos
     IF @@ROWCOUNT > 0
     BEGIN
         DECLARE @texto NVARCHAR(255);
         SET @texto = CONCAT('Borrado lógico de la venta con Factura: ', @factura, ' y Tipo: ', @tipo_factura);
 
-        -- Llamada al procedimiento para registrar el borrado
-        EXEC registrar_borrado_logico @texto = @texto, @modulo = @modulo;
+        -- Llamamos al proc para el registro
+        EXEC registros.registrarBorrado @texto = @texto, @modulo = @modulo;
     END
 END;
 
@@ -182,19 +182,19 @@ CREATE OR ALTER PROCEDURE catalogo.borrado_logico_producto
     @modulo NVARCHAR(50) = 'producto'
 AS
 BEGIN
-    -- Actualización para realizar el borrado lógico en catalogo.producto
+    
     UPDATE catalogo.producto
     SET activo = 0
     WHERE id = @id;
 
-    -- Si se modificó alguna fila, proceder con el registro en la tabla Registro
+   
     IF @@ROWCOUNT > 0
     BEGIN
         DECLARE @texto NVARCHAR(255);
         SET @texto = CONCAT('Borrado lógico del producto con ID: ', @id);
 
         -- Llamada al procedimiento para registrar el borrado
-        EXEC registrar_borrado_logico @texto = @texto, @modulo = @modulo;
+        EXEC registros.registrarBorrado @texto = @texto, @modulo = @modulo;
     END
 END;
 GO
