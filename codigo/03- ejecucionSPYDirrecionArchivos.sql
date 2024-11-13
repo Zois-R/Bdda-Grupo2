@@ -80,7 +80,7 @@ go
 select * from registros.bitácora
 go
 
-
+--- testing
 -- Primero, declaramos la tabla de tipo `TipoProductosDetalle` con los productos a insertar
 DECLARE @productosDetalle ventas.TipoProductosDetalle;
 
