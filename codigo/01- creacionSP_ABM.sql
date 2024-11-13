@@ -580,10 +580,78 @@ GO
 
 
 
+--------------------------------------------------------------------------------------------------------
+--STORE PARA MODIFICAR DATOS DE LA SUCURSAL (NRO TELEFONO Y HORARIO)
+--------------------------------------------------------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE supermercado.ModificarDatosSucursal
+    @ciudad VARCHAR(40),
+    @localidad VARCHAR(40),
+    @nuevoHorario VARCHAR(100) = NULL,  
+    @nuevoTelefono VARCHAR(20) = NULL     
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Actualizamos los campos horario y telefono solo si no son NULL
+    UPDATE supermercado.sucursal
+    SET 
+        horario = CASE WHEN @nuevoHorario IS NOT NULL THEN @nuevoHorario ELSE horario END,
+        telefono = CASE WHEN @nuevoTelefono IS NOT NULL THEN @nuevoTelefono ELSE telefono END
+    WHERE 
+        ciudad = @ciudad AND 
+        localidad = @localidad;
+
+   --se modificó algo?
+    IF @@ROWCOUNT = 0
+    BEGIN
+        PRINT 'No se encontró la sucursal especificada.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Sucursal actualizada correctamente.';
+    END
+END;
+GO
 
 
 
+--------------------------------------------------------------------------------------------------------
+--STORE PARA MODIFICACIÓN DE TABLA EMPLEADO 
+--------------------------------------------------------------------------------------------------------
 
+CREATE PROCEDURE supermercado.ModificarDatosEmpleado
+    @legajo INT,
+    @direccionNueva VARCHAR(100) = NULL,
+    @emailPersonalNuevo VARCHAR(80) = NULL,
+    @cargoNuevo VARCHAR(20) = NULL,
+    @idSucursalNueva INT = NULL,  
+    @turnoNuevo VARCHAR(30) = NULL  
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Actualizamos los campos solo si los parámetros no son NULL
+    UPDATE supermercado.empleado
+    SET 
+        direccion = COALESCE(@direccionNueva, direccion),
+        email_personal = COALESCE(@emailPersonalNuevo, email_personal),
+        cargo = COALESCE(@cargoNuevo, cargo),
+        idSucursal = COALESCE(@idSucursalNueva, idSucursal),
+        turno = COALESCE(@turnoNuevo, turno)
+    WHERE legajo = @legajo;
+
+    --se modificó algo? 
+    IF @@ROWCOUNT = 0
+    BEGIN
+        PRINT 'No se encontró el empleado especificado o no se realizaron cambios.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Empleado actualizado correctamente.';
+    END
+END;
+GO
 
 
 
