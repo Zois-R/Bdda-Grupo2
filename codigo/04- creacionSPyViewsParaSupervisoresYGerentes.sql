@@ -1,7 +1,7 @@
 use COM5600G02;
 go
 
-
+--- esta vista se une con tabla cliente....no muestra datos de tablas que tengan el id de cliente en null
 CREATE or ALTER VIEW ventas.vista_factura_detalle AS
 SELECT 
     f.id AS IdFactura, 
@@ -19,20 +19,25 @@ SELECT
     d.cant, 
     d.precio, 
     s.localidad, 
-    v.tipo_cliente, 
-    v.genero,
+    c.tipo_cliente, 
+    c.genero,
     v.idEmpleado AS legajoEmpleado
 FROM 
     ventas.factura f 
 JOIN 
     ventas.detalleVenta d ON f.id = d.idFactura
 JOIN 
-    ventas.ventas_registradas v ON f.id = v.idFactura 
+    ventas.registro_de_ventas v ON f.id = v.idFactura 
 JOIN 
     supermercado.sucursal s ON v.idSucursal = s.id
 JOIN 
-    supermercado.empleado e ON v.idEmpleado = e.legajo;
+    supermercado.empleado e ON v.idEmpleado = e.legajo
+LEFT JOIN
+	ventas.cliente c ON v.idCliente = c.id;
 go
+
+
+
 
 
 CREATE OR ALTER PROCEDURE ventas.insertarNotaDeCredito
@@ -59,7 +64,8 @@ BEGIN
                         WHEN @razon = 'devPago' THEN subtotal
                         WHEN @razon = 'devProd' THEN p.Precio * cant
                     END
-    FROM ventas.detalleVenta d join catalogo.producto p on d.idProducto = p.id
+    FROM ventas.detalleVenta d 
+    JOIN catalogo.producto p ON d.idProducto = p.id
     WHERE idFactura = @idFactura 
       AND idProducto = @idProducto;
 
@@ -68,6 +74,13 @@ BEGIN
     BEGIN
         PRINT 'No se encontró un detalle de venta con la combinación de idFactura y idProducto especificada.';
         RETURN;
+    END;
+
+    -- Verificar si ya existe una nota de crédito para este detalle de venta
+    IF EXISTS (SELECT 1 FROM ventas.notasDeCredito WHERE idDetalleVenta = @idDetalleVenta)
+    BEGIN
+        RAISERROR ('Ya existe una nota de crédito asociada a este detalle de venta.', 16, 1);
+        RETURN;  -- Detener la ejecución si ya existe una nota de crédito para este detalle de venta
     END;
 
     -- Insertar el registro en la tabla ventas.notasDeCredito con el monto calculado
@@ -98,9 +111,9 @@ BEGIN
     -- Configuración de formato para devolver los nombres de días en español
     SET LANGUAGE Spanish;
 
-	DECLARE @WinHttpObject INT;
+    DECLARE @WinHttpObject INT;
     DECLARE @ResponseJsonText VARCHAR(8000);
-    DECLARE @Venta DECIMAL(8, 2); -- Variable para almacenar el valor de 'venta'
+    DECLARE @ValorDivisa DECIMAL(8, 2); -- Variable para almacenar el valor de la divisa
 
     -- Crear objeto HTTP
     EXEC sp_OACreate 'WinHttp.WinHttpRequest.5.1', @WinHttpObject OUT;
@@ -120,39 +133,40 @@ BEGIN
     -- Verificar si la respuesta es un JSON válido
     IF ISJSON(@ResponseJsonText) = 1
     BEGIN
-        -- Inicializar la variable @Venta con el valor de 'venta'
-        SET @Venta = CAST(JSON_VALUE(@ResponseJsonText, '$.venta') AS DECIMAL(8, 2));
+        -- Inicializar la variable @ValorDivisa con el valor de 'venta'
+        SET @ValorDivisa = CAST(JSON_VALUE(@ResponseJsonText, '$.venta') AS DECIMAL(8, 2));
     END
-	ELSE
-	BEGIN
-		-- Abortar el procedimiento
-		PRINT 'La respuesta no es un JSON válido';
-		RETURN;
-	END;
+    ELSE
+    BEGIN
+        -- Abortar el procedimiento
+        PRINT 'La respuesta no es un JSON válido';
+        RETURN;
+    END;
 
-	-- Calcular el total facturado por día de la semana
-	WITH FacturacionSemana AS (
-		SELECT 
-			DATENAME(weekday, f.fecha) AS DiaSemana,
-			SUM(d.subtotal - ISNULL(nc.monto, 0)) AS TotalFacturado
-		FROM 
-			ventas.factura AS f
-		JOIN 
-			ventas.detalleVenta AS d ON f.id = d.idFactura
-		LEFT JOIN 
-			ventas.notasDeCredito AS nc ON nc.idDetalleVenta = d.id
-		WHERE 
-			MONTH(f.fecha) = @mes
-			AND YEAR(f.fecha) = @anio
-		GROUP BY 
-			DATENAME(weekday, f.fecha), DATEPART(weekday, f.fecha)
-	)
-	SELECT DiaSemana, TotalFacturado,
-        (TotalFacturado * @Venta) AS EnPesosArgentinos
-	FROM FacturacionSemana
-	FOR XML PATH('DiaSemanaFactura'), ROOT('Reporte');
+    -- Calcular el total facturado por día de la semana
+    WITH FacturacionSemana AS (
+        SELECT 
+            DATENAME(weekday, f.fecha) AS DiaSemana,
+            SUM(f.totalConIva - ISNULL(nc.monto, 0)) AS TotalFacturado
+        FROM 
+            ventas.factura AS f
+        JOIN 
+            ventas.detalleVenta AS d ON f.id = d.idFactura
+        LEFT JOIN 
+            ventas.notasDeCredito AS nc ON nc.idDetalleVenta = d.id
+        WHERE 
+            MONTH(f.fecha) = @mes
+            AND YEAR(f.fecha) = @anio
+        GROUP BY 
+            DATENAME(weekday, f.fecha), DATEPART(weekday, f.fecha)
+    )
+    SELECT DiaSemana, TotalFacturado,
+        (TotalFacturado * @ValorDivisa) AS EnPesosArgentinos
+    FROM FacturacionSemana
+    FOR XML PATH('DiaSemanaFactura'), ROOT('Reporte');
 END;
 GO
+
 
 
 /*
@@ -300,12 +314,12 @@ BEGIN
         MONTH(f.fecha) AS Mes,
         e.turno AS Turno,
         DATENAME(MONTH, f.fecha) AS MesNombre,
-        SUM(d.subtotal) - COALESCE(SUM(n.monto), 0) AS Facturacion
+        SUM(f.totalConIva) - COALESCE(SUM(n.monto), 0) AS Facturacion
     FROM ventas.factura f
     JOIN ventas.detalleVenta d ON f.id = d.idFactura
     LEFT JOIN ventas.notasDeCredito n 
         ON d.id = n.idDetalleVenta 
-    JOIN ventas.ventas_registradas vr ON f.id = vr.idFactura
+    JOIN ventas.registro_de_ventas vr ON f.id = vr.idFactura
     JOIN supermercado.empleado e ON vr.idEmpleado = e.legajo
     WHERE f.fecha BETWEEN @FechaInicio AND @FechaFin
       AND f.estadoDePago = 'pagada'
@@ -433,7 +447,7 @@ BEGIN
     JOIN catalogo.producto p ON d.idProducto = p.id
     LEFT JOIN ventas.notasDeCredito nc ON nc.idDetalleVenta = d.id
     WHERE f.fecha BETWEEN @FechaIni AND @FechaFinal
-    AND (nc.id IS NULL OR nc.razon != 'devolución de pago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
+    AND (nc.id IS NULL OR nc.razon != 'devPago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
     GROUP BY p.nombre
     ORDER BY CantidadVendida DESC
     FOR XML PATH('Producto'), ROOT('ReporteProductosVendidos');
@@ -484,11 +498,11 @@ BEGIN
     FROM ventas.detalleVenta d
     JOIN ventas.factura f ON d.idFactura = f.id
     JOIN catalogo.producto p ON d.idProducto = p.id
-    JOIN ventas.ventas_registradas r ON d.idFactura = r.idFactura  -- Ahora se obtiene el idSucursal de la tabla 'registradas'
+    JOIN ventas.registro_de_ventas r ON d.idFactura = r.idFactura  -- Ahora se obtiene el idSucursal de la tabla 'registradas'
     JOIN supermercado.sucursal s ON r.idSucursal = s.id   -- El idSucursal está en 'registradas'
     LEFT JOIN ventas.notasDeCredito nc ON nc.idDetalleVenta = d.id
     WHERE f.fecha BETWEEN @FechaIni AND @FechaFinal
-    AND (nc.id IS NULL OR nc.razon != 'devolución de pago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
+    AND (nc.id IS NULL OR nc.razon != 'devPago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
     GROUP BY s.localidad, p.nombre
     ORDER BY CantidadVendida DESC
     FOR XML PATH('Venta'), ROOT('ReporteProductosVendidosPorSucursal');
@@ -684,16 +698,16 @@ BEGIN
         SELECT 
             p.nombre AS Producto,               -- Nombre del producto
             SUM(d.cant) AS CantidadVendida,     -- Total de productos vendidos
-            SUM(d.cant * p.precio) AS TotalVenta -- Total de ventas por producto
+            f.totalConIva AS TotalVenta -- Total de ventas por producto
         FROM ventas.detalleVenta d
         JOIN ventas.factura f ON d.idFactura = f.id
         JOIN catalogo.producto p ON d.idProducto = p.id
-        JOIN ventas.ventas_registradas r ON d.idFactura = r.idFactura
+        JOIN ventas.registro_de_ventas r ON d.idFactura = r.idFactura
         LEFT JOIN ventas.notasDeCredito nc ON nc.idDetalleVenta = d.id
         AND (nc.id IS NULL OR nc.razon != 'devolución de pago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
         WHERE f.fecha <= @Fecha
           AND r.idSucursal = @SucursalID  -- Filtro por sucursal
-        GROUP BY p.nombre
+        GROUP BY p.nombre, f.totalConIva
     ),
     TotalVentasAcumulado AS (
         SELECT SUM(TotalVenta) AS TotalVentas
@@ -705,7 +719,7 @@ BEGIN
         vp.TotalVenta AS 'TotalVenta',           -- Total de ventas por producto
 		(vp.TotalVenta * @Venta) AS EnPesosArgentinos,
         ta.TotalVentas AS 'AcumuladoTotalVentas', -- Total acumulado de todas las ventas
-		(vp.TotalVenta * @Venta) AS TotalEnPesosArgentinos
+		(TotalVentas * @Venta) AS TotalEnPesosArgentinos
     FROM VentasPorProducto vp
     CROSS JOIN TotalVentasAcumulado ta
     ORDER BY vp.TotalVenta DESC
@@ -842,8 +856,8 @@ SELECT
     f.nroFactura as ID_Factura, 
     f.tipo_Factura as Tipo_de_factura, 
 	s.ciudad as Ciudad,
-    v.tipo_cliente as Tipo_de_cliente, 
-    v.genero as Genero,
+    c.tipo_cliente as Tipo_de_cliente, 
+    c.genero as Genero,
 	lp.nombre as Linea_de_Producto,
 	p.nombre as Producto,
 	p.Precio as Precio_unitario,
@@ -858,7 +872,7 @@ FROM
 JOIN 
     ventas.detalleVenta d ON f.id = d.idFactura
 JOIN 
-    ventas.ventas_registradas v ON f.id = v.idFactura 
+    ventas.registro_de_ventas v ON f.id = v.idFactura 
 JOIN 
     supermercado.sucursal s ON v.idSucursal = s.id
 JOIN 
@@ -868,7 +882,9 @@ JOIN
 JOIN
 	catalogo.linea_de_producto lp ON d.idLineaProducto = lp.id
 JOIN 
-	ventas.mediosDePago mp ON f.idMedio_de_pago = mp.id;
+	ventas.mediosDePago mp ON f.idMedio_de_pago = mp.id
+LEFT JOIN
+	ventas.cliente c ON v.idCliente = c.id;
 go
 
 

@@ -157,8 +157,10 @@ GRANT SELECT ON ventas.notasDeCredito TO supervisor;
 go
 
 select * from ventas.notasDeCredito
+go
 select * from catalogo.producto
--- ejemplo 
+go
+
 EXEC ventas.insertarNotaDeCredito
     @idFactura = 1,
     @idProducto = 5495,
