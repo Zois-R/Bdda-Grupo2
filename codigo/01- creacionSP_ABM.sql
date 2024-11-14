@@ -18,6 +18,7 @@ end;
 GO
 
 
+ 
 
 
 CREATE OR ALTER PROCEDURE supermercado.insertarComercio
@@ -116,12 +117,12 @@ GO
 
 CREATE OR ALTER PROCEDURE supermercado.insertarEmpleado
     @legajo INT,
-    @nombre NVARCHAR(256),
-    @apellido NVARCHAR(256),
-    @dni NVARCHAR(256),
-    @direccion NVARCHAR(256),
-    @email_personal NVARCHAR(256),
-    @email_empresa NVARCHAR(256),
+    @nombre VARCHAR(256),
+    @apellido VARCHAR(256),
+    @dni VARCHAR(256),
+    @direccion VARCHAR(256),
+    @email_personal VARCHAR(256),
+    @email_empresa VARCHAR(256),
     @cargo VARCHAR(20),
     @idSucursal INT,
     @turno VARCHAR(30),
@@ -133,19 +134,20 @@ BEGIN
     DECLARE @emailEmpresaExistente INT;
 
     -- Verificar si ya existe un empleado con el mismo DNI (descifrado)
+
     SET @dniExistente = (SELECT COUNT(*) 
                          FROM supermercado.empleado 
-                         WHERE CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClave, dni)) = @dni);
+                         WHERE CONVERT(VARCHAR(256), DecryptByPassPhrase(@FraseClave, dni)) = @dni);
 
     -- Verificar si ya existe un empleado con el mismo correo personal (descifrado)
     SET @emailPersonalExistente = (SELECT COUNT(*) 
                                    FROM supermercado.empleado 
-                                   WHERE CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClave, email_personal)) = @email_personal);
+                                   WHERE CONVERT(VARCHAR(256), DecryptByPassPhrase(@FraseClave, email_personal)) = @email_personal);
 
     -- Verificar si ya existe un empleado con el mismo correo de empresa (descifrado)
     SET @emailEmpresaExistente = (SELECT COUNT(*) 
                                   FROM supermercado.empleado 
-                                  WHERE CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClave, email_empresa)) = @email_empresa);
+                                  WHERE CONVERT(VARCHAR(256), DecryptByPassPhrase(@FraseClave, email_empresa)) = @email_empresa);
 
     -- Verificar condiciones
     IF @dniExistente > 0 AND @emailPersonalExistente > 0 AND @emailEmpresaExistente > 0
@@ -202,7 +204,7 @@ BEGIN
              @idSucursal,
              @turno);
 
-        -- Registro de inserción
+        -- Registro de inserciÃ³n
         DECLARE @mensajeInsercion VARCHAR(1000);
         SET @mensajeInsercion = FORMATMESSAGE('Nuevo empleado insertado con legajo %d', @legajo);
         
@@ -229,6 +231,7 @@ EXEC supermercado.insertarEmpleado
 
 
 
+go
 CREATE OR ALTER PROCEDURE catalogo.insertarProducto
     @nombre NVARCHAR(200),
     @Precio DECIMAL(18, 2),
@@ -328,7 +331,8 @@ GO
 
 
 
-CREATE or ALTER PROCEDURE ventas.insertar_cliente
+
+CREATE OR ALTER PROCEDURE ventas.insertar_cliente
     @cuil VARCHAR(20),
     @tipoCliente VARCHAR(15),
     @genero VARCHAR(15),
@@ -344,6 +348,7 @@ BEGIN
         -- El cliente ya existe, no se inserta y se retorna el ID del cliente existente
         SELECT @idCliente = id FROM ventas.cliente WHERE cuil = @cuil;
         SET @clienteExistente = 1;  -- Indicar que el cliente ya existe
+		
     END
     ELSE
     BEGIN
@@ -383,6 +388,16 @@ BEGIN
     DECLARE @IVA DECIMAL(4, 2) = 1.21;  -- Tasa de IVA (21%) directamente como 1.21
     DECLARE @idCliente INT;
     DECLARE @clienteExistente BIT;
+
+	--Validar el nro de factura no exista en la tabla factura, si existe hago un return sino ejecuta
+
+	IF EXISTS (SELECT 1 FROM ventas.factura WHERE nroFactura = @nroFactura)
+    BEGIN
+		print('YA EXISTE LA FACTURA')
+        RETURN;
+    END
+
+
 
     -- 1. Insertar la factura sin total ni totalConIVA (aún por calcular)
     INSERT INTO ventas.factura (nroFactura, tipo_Factura, fecha, hora, idMedio_de_pago, idPago, estadoDePago)

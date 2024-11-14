@@ -10,7 +10,7 @@ EXEC supermercado.insertarComercio
 go
 
 --ingresar el destino del archivo de imformacion complementaria.xlsx
-EXEC supermercado.importarSucursal 'C:\importar\Informacion_complementaria.xlsx';
+EXEC supermercado.importarSucursal 'C:\Users\DELL\Desktop\TP_integrador_Archivos\Informacion_complementaria.xlsx';
 GO
 select * from supermercado.sucursal;
 GO
@@ -18,7 +18,7 @@ select * from registros.bitácora
 go
 
 --archivo de imformacion complementaria.xlsx
-EXEC supermercado.importarEmpleados 'C:\importar\Informacion_complementaria.xlsx', 'La vida es como la RAM, todo es temporal y nada se queda.';
+EXEC supermercado.importarEmpleados 'C:\Users\DELL\Desktop\TP_integrador_Archivos\Informacion_complementaria.xlsx', 'La vida es como la RAM, todo es temporal y nada se queda.';
 GO
 select * from supermercado.empleado;
 go
@@ -27,7 +27,7 @@ go
 
 
 --archivo de imformacion complementaria.xlsx
-EXEC catalogo.importarLinea_de_producto 'C:\importar\Informacion_complementaria.xlsx';
+EXEC catalogo.importarLinea_de_producto 'C:\Users\DELL\Desktop\TP_integrador_Archivos\Informacion_complementaria.xlsx';
 GO
 EXEC catalogo.insertarLinea_de_producto 'Importados', 'productos_importados';
 GO
@@ -41,13 +41,13 @@ go
 
 
 --archivo de catalogo.csv
-exec catalogo.importarCatalogo 'C:\importar\catalogo.csv';
+exec catalogo.importarCatalogo 'C:\Users\DELL\Desktop\TP_integrador_Archivos\Productos\catalogo.csv';
 GO
 --archivo de productos importados.xlsx
-exec catalogo.importarProductosImportados 'C:\importar\Productos_importados.xlsx';
+exec catalogo.importarProductosImportados 'C:\Users\DELL\Desktop\TP_integrador_Archivos\Productos\Productos_importados.xlsx';
 GO
 --archivo de electronico acesories.xlsx
-exec catalogo.importarAccesorios 'C:\importar\Electronic accessories.xlsx';
+exec catalogo.importarAccesorios 'C:\Users\DELL\Desktop\TP_integrador_Archivos\Productos\Electronic accessories.xlsx';
 GO
 
 select * from catalogo.producto
@@ -56,7 +56,7 @@ select * from registros.bitácora
 go
 
 --archivo de imformacion complementaria.xlsx
-EXEC ventas.importarMedios_de_Pago 'C:\importar\informacion_complementaria.xlsx';
+EXEC ventas.importarMedios_de_Pago 'C:\Users\DELL\Desktop\TP_integrador_Archivos\Informacion_complementaria.xlsx';
 GO
 select * from ventas.mediosDePago
 go
@@ -64,9 +64,9 @@ select * from registros.bitácora
 go
 
 --archivo de ventas registradas.csv
-EXEC ventas.importarVentas_registradas 'C:\importar\ventas_registradas.csv';
+EXEC ventas.importarVentas_registradas 'C:\Users\DELL\Desktop\TP_integrador_Archivos\Ventas_registradas.csv';
 go
-select * from ventas.factura --- 750-67-8428    815,816
+select * from ventas.factura 
 go
 select * from ventas.detalleVenta
 WHERE idFactura IN (815,816)

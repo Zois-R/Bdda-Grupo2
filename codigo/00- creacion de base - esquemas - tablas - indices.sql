@@ -54,6 +54,7 @@ CREATE TABLE supermercado.Comercio (
     email nvarchar(100)
 	constraint pk_comercio primary key clustered (cuit)
 );    
+ 
 go
 
 
@@ -90,6 +91,11 @@ create table supermercado.empleado
 		constraint fk_sucursal foreign key (idSucursal) references supermercado.sucursal(id)
 	);
 go
+
+                                       
+
+
+
 
 ---------------------esquema catalogo
 
@@ -128,7 +134,6 @@ create table ventas.mediosDePago
 	);
 go
 
-
 create table ventas.factura
 	(
 		id				int identity(1,1),
@@ -145,7 +150,6 @@ create table ventas.factura
 		constraint fk_medioDePago foreign key (idMedio_de_pago) references ventas.mediosDePago(id),
 	);
 go
-
 
 create table ventas.detalleVenta
 	(
@@ -188,6 +192,10 @@ create table ventas.registro_de_ventas
 	);
 go
 
+
+
+
+
 CREATE TABLE ventas.notasDeCredito 
 	(
 		id				INT IDENTITY(1,1),
@@ -209,6 +217,7 @@ creamos un tipo de tabla llamado TipoProductosDetalle para pasar
 la información de multiples productos como un parámetro al sp que inserta nuevas ventas.
 */
 
+--Lo usamos al insertar una venta
 CREATE TYPE ventas.TipoProductosDetalle AS TABLE (
     idProducto INT,
     idLineaProducto INT,
@@ -248,3 +257,5 @@ create nonclustered index ix_linea on catalogo.linea_de_producto(nombre)
 go
 create nonclustered index ix_factura on ventas.factura(nroFactura)
 go
+
+
