@@ -47,16 +47,28 @@ create table registros.bitácora(
 go
 --------------------------------------------------------------------------
 
+CREATE TABLE supermercado.Comercio (
+    cuit NVARCHAR(20) , 
+    nombre_comercio nvarchar(30),           
+	razon_social  nvarchar(30),                 
+    email nvarchar(100)
+	constraint pk_comercio primary key clustered (cuit)
+);    
+
+
+
 create table supermercado.sucursal 
 	(
 		id			int identity(1,1),
+		idComercio  varchar(20),
 		ciudad		varchar(40),
 		localidad   varchar(40),
 		direccion	varchar(150),
 		horario		varchar(100),
 		telefono	VARCHAR(20),
 		activo		bit default 1,-- para el borrado logico
-		constraint pk_sucursal primary key clustered (id)
+		constraint pk_sucursal primary key clustered (id),
+		constraint fk_empresa foreign key (idComercio) references supermercado.Comercio(cuit)
 	);
 go
 
@@ -78,6 +90,11 @@ create table supermercado.empleado
 		constraint fk_sucursal foreign key (idSucursal) references supermercado.sucursal(id)
 	);
 go
+
+                                       
+
+
+
 
 ---------------------esquema catalogo
 
@@ -116,7 +133,6 @@ create table ventas.mediosDePago
 	);
 go
 
-
 create table ventas.factura
 	(
 		id				int identity(1,1),
@@ -134,7 +150,6 @@ create table ventas.factura
 	);
 go
 
-
 create table ventas.detalleVenta
 	(
 		id				int identity(1,1),
@@ -146,8 +161,8 @@ create table ventas.detalleVenta
 		subtotal		decimal(10,2),
 		constraint pk_detalleVenta primary key clustered (id),
 		constraint fk_factura1 foreign key (idFactura) references ventas.factura(id),
-		constraint fk_producto2 foreign key (idProducto) references catalogo.producto(id),
-		constraint fk_lineaProd foreign key (idLineaProducto) references catalogo.linea_de_producto(id)
+		constraint fk_producto2 foreign key (idProducto) references catalogo.producto(id), 
+		constraint fk_lineaProd foreign key (idLineaProducto) references catalogo.linea_de_producto(id) -- LO BORRAMOS? JON DECIDIRÁ
 	);
 go
 
@@ -178,6 +193,10 @@ create table ventas.registro_de_ventas
 	);
 go
 
+
+
+
+
 CREATE TABLE ventas.notasDeCredito 
 	(
 		id				INT IDENTITY(1,1),
@@ -199,6 +218,7 @@ creamos un tipo de tabla llamado TipoProductosDetalle para pasar
 la información de multiples productos como un parámetro a el sp que inserta nuevas ventas.
 */
 
+--Lo usamos al insertar una venta
 CREATE TYPE ventas.TipoProductosDetalle AS TABLE (
     idProducto INT,
     idLineaProducto INT,
@@ -238,3 +258,5 @@ create nonclustered index ix_linea on catalogo.linea_de_producto(nombre)
 go
 create nonclustered index ix_factura on ventas.factura(nroFactura)
 go
+
+
