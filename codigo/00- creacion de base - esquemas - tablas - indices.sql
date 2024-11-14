@@ -160,9 +160,7 @@ create table ventas.detalleVenta
 		subtotal		decimal(10,2),
 		constraint pk_detalleVenta primary key clustered (id),
 		constraint fk_factura1 foreign key (idFactura) references ventas.factura(id),
-
 		constraint fk_producto2 foreign key (idProducto) references catalogo.producto(id)
-
 	);
 go
 
