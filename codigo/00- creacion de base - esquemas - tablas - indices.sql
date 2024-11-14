@@ -140,14 +140,12 @@ create table ventas.detalleVenta
 		id				int identity(1,1),
 		idFactura		int,
 		idProducto		int,
-		idLineaProducto int,
 		precio			decimal(6,2),
 		cant			smallint not null,
 		subtotal		decimal(10,2),
 		constraint pk_detalleVenta primary key clustered (id),
 		constraint fk_factura1 foreign key (idFactura) references ventas.factura(id),
-		constraint fk_producto2 foreign key (idProducto) references catalogo.producto(id),
-		constraint fk_lineaProd foreign key (idLineaProducto) references catalogo.linea_de_producto(id)
+		constraint fk_producto2 foreign key (idProducto) references catalogo.producto(id)
 	);
 go
 
@@ -193,10 +191,10 @@ GO
 /*
 los parámetros de tipo TABLE no se pueden pasar directamente a un procedimiento almacenado. 
 Una alternativa es crear una variable de tipo de tabla en la base de datos, 
-que luego puedes usar como parámetro en el procedimiento.
+que luego podemos usar como parámetro en el procedimiento.
 
 creamos un tipo de tabla llamado TipoProductosDetalle para pasar 
-la información de multiples productos como un parámetro a el sp que inserta nuevas ventas.
+la información de multiples productos como un parámetro al sp que inserta nuevas ventas.
 */
 
 CREATE TYPE ventas.TipoProductosDetalle AS TABLE (

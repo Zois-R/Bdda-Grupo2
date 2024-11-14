@@ -14,7 +14,7 @@ SELECT
     f.estadoDePago,
     d.id AS idDetalle_venta, 
     d.idProducto, 
-    d.idLineaProducto, 
+    p.id_linea AS LineaDeProducto, 
     d.subtotal, 
     d.cant, 
     d.precio, 
@@ -28,6 +28,8 @@ JOIN
     ventas.detalleVenta d ON f.id = d.idFactura
 JOIN 
     ventas.registro_de_ventas v ON f.id = v.idFactura 
+JOIN
+	catalogo.producto p ON d.idProducto = p.id
 JOIN 
     supermercado.sucursal s ON v.idSucursal = s.id
 JOIN 
@@ -880,7 +882,7 @@ JOIN
 JOIN
 	catalogo.producto p ON d.idProducto = p.id
 JOIN
-	catalogo.linea_de_producto lp ON d.idLineaProducto = lp.id
+	catalogo.linea_de_producto lp ON p.id_linea = lp.id
 JOIN 
 	ventas.mediosDePago mp ON f.idMedio_de_pago = mp.id
 LEFT JOIN
@@ -889,7 +891,86 @@ go
 
 
 
+--------------------------------------------------------------------------------------------------------
+-- SPs PARA EL DBA
+--------------------------------------------------------------------------------------------------------
+
+--- MOSTRAR EMPLEADOS DESENCRIPTADOS
+
+CREATE OR ALTER PROCEDURE supermercado.mostrarEmpleadosDesencriptados
+    @FraseClave NVARCHAR(128)
+AS
+BEGIN
+    SELECT
+        legajo,
+        nombre = CONVERT(VARCHAR(30), DecryptByPassPhrase(@FraseClave, nombre)),
+        apellido = CONVERT(VARCHAR(30), DecryptByPassPhrase(@FraseClave, apellido)),
+        dni = CONVERT(INT, DecryptByPassPhrase(@FraseClave, dni)),
+        direccion = CONVERT(VARCHAR(100), DecryptByPassPhrase(@FraseClave, direccion)),
+        email_personal = CONVERT(VARCHAR(80), DecryptByPassPhrase(@FraseClave, email_personal)),
+        email_empresa = CONVERT(VARCHAR(80), DecryptByPassPhrase(@FraseClave, email_empresa)),
+        cargo,
+        idSucursal,
+        turno
+    FROM supermercado.empleado;
+END;
+GO
 
 
 
+--- este sp sirve para cifrar con una nueva frase clave, mandandole la anterior clave para que descifre antes de cifrar
 
+CREATE OR ALTER PROCEDURE supermercado.CambiarCifradoTablaEmpleado
+    @FraseClaveVieja NVARCHAR(128),
+    @FraseClaveNueva NVARCHAR(128)
+AS
+BEGIN
+    -- Actualizar cada fila: primero descifrar con la FraseClaveVieja y luego cifrar con la FraseClaveNueva
+    UPDATE supermercado.empleado
+    SET 
+        nombre = EncryptByPassPhrase(@FraseClaveNueva, CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClaveVieja, nombre))),
+        apellido = EncryptByPassPhrase(@FraseClaveNueva, CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClaveVieja, apellido))),
+        dni = EncryptByPassPhrase(@FraseClaveNueva, CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClaveVieja, dni))),
+        direccion = EncryptByPassPhrase(@FraseClaveNueva, CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClaveVieja, direccion))),
+        email_personal = EncryptByPassPhrase(@FraseClaveNueva, CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClaveVieja, email_personal))),
+        email_empresa = EncryptByPassPhrase(@FraseClaveNueva, CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClaveVieja, email_empresa)));
+END;
+GO
+
+
+--- este sp solo descifra con la frase clave correcta
+
+CREATE OR ALTER PROCEDURE supermercado.DescifrarTablaEmpleado
+    @FraseClave NVARCHAR(128)
+AS
+BEGIN
+    -- Actualizar cada fila descifrando las columnas especificadas
+    UPDATE supermercado.empleado
+    SET 
+        nombre = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, nombre)),
+        apellido = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, apellido)),
+        dni = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, dni)),
+        direccion = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, direccion)),
+        email_personal = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, email_personal)),
+        email_empresa = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, email_empresa));
+END;
+GO
+
+
+--- este sp cifra pero suponiendo que anteriormente fue descifrada
+
+CREATE OR ALTER PROCEDURE supermercado.CifrarTablaEmpleado
+    @FraseClave NVARCHAR(128)
+AS
+BEGIN
+    -- Actualizar cada fila cifrando las columnas especificadas directamente
+    UPDATE supermercado.empleado
+    SET 
+        nombre = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), nombre)),
+        apellido = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), apellido)),
+        dni = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), dni)),
+        direccion = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), direccion)),
+        email_personal = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), email_personal)),
+        email_empresa = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), email_empresa));
+END;
+GO

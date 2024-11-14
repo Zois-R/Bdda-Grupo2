@@ -342,15 +342,15 @@ BEGIN
         @clienteExistente = @clienteExistente OUTPUT;
 
     -- 3. Insertar detalles de venta para cada producto y calcular subtotales
-    DECLARE @idProducto INT, @idLineaProducto INT, @precio DECIMAL(6, 2), @cantidad SMALLINT;
+    DECLARE @idProducto INT, @precio DECIMAL(6, 2), @cantidad SMALLINT;
     DECLARE @subtotal DECIMAL(10, 2), @subtotalConIVA DECIMAL(10, 2);
 
     DECLARE product_cursor CURSOR FOR 
-    SELECT idProducto, idLineaProducto, precio, cantidad
+    SELECT idProducto, precio, cantidad
     FROM @productosDetalle;
 
     OPEN product_cursor;
-    FETCH NEXT FROM product_cursor INTO @idProducto, @idLineaProducto, @precio, @cantidad;
+    FETCH NEXT FROM product_cursor INTO @idProducto, @precio, @cantidad;
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
@@ -359,14 +359,14 @@ BEGIN
         SET @subtotalConIVA = @subtotal * @IVA;
 
         -- Insertar detalle de venta
-        INSERT INTO ventas.detalleVenta (idProducto, idLineaProducto, idFactura, subtotal, cant, precio)
-        VALUES (@idProducto, @idLineaProducto, @idFactura, @subtotal, @cantidad, @precio);
+        INSERT INTO ventas.detalleVenta (idProducto, idFactura, subtotal, cant, precio)
+        VALUES (@idProducto, @idFactura, @subtotal, @cantidad, @precio);
 
         -- Acumular totales para la factura
         SET @total = @total + @subtotal;
         SET @totalConIVA = @totalConIVA + @subtotalConIVA;
 
-        FETCH NEXT FROM product_cursor INTO @idProducto, @idLineaProducto, @precio, @cantidad;
+        FETCH NEXT FROM product_cursor INTO @idProducto, @precio, @cantidad;
     END;
 
     CLOSE product_cursor;
@@ -398,68 +398,6 @@ GO
 
 
 
-CREATE OR ALTER TRIGGER supermercado.trg_AfterUpdate_Sucursal
-ON supermercado.sucursal
-AFTER UPDATE
-AS
-BEGIN
-    -- Declarar variables para almacenar información de las filas afectadas
-    DECLARE @ciudad VARCHAR(40);
-    DECLARE @localidad VARCHAR(40);
-    DECLARE @nuevoHorario VARCHAR(100);
-    DECLARE @nuevoTelefono VARCHAR(20);
-    DECLARE @horarioAntiguo VARCHAR(100);
-    DECLARE @telefonoAntiguo VARCHAR(20);
-    DECLARE @mensajeHorario NVARCHAR(400);
-    DECLARE @mensajeTelefono NVARCHAR(400);
-
-    -- Usar un cursor para recorrer las filas afectadas
-    DECLARE cur CURSOR FOR
-    SELECT 
-        i.ciudad,
-        i.localidad,
-        i.horario,
-        i.telefono,
-        d.horario,
-        d.telefono
-    FROM inserted i
-    JOIN deleted d ON i.ciudad = d.ciudad 
-                   AND i.localidad = d.localidad
-    WHERE i.horario <> d.horario OR i.telefono <> d.telefono; -- Cambios en horario o teléfono
-
-    OPEN cur;
-    FETCH NEXT FROM cur INTO @ciudad, @localidad, @nuevoHorario, @nuevoTelefono, @horarioAntiguo, @telefonoAntiguo;
-
-    WHILE @@FETCH_STATUS = 0
-    BEGIN
-        -- Registrar cambios en el log
-        IF @nuevoHorario <> @horarioAntiguo
-        BEGIN
-            SET @mensajeHorario = FORMATMESSAGE('Actualización de horario en sucursal: %s, %s. Horario antiguo: %s, Nuevo horario: %s',
-                                                 @ciudad, @localidad, @horarioAntiguo, @nuevoHorario);
-            EXEC registros.insertarLog 'importarSucursal', @mensajeHorario;
-        END
-        
-        IF @nuevoTelefono <> @telefonoAntiguo
-        BEGIN
-            SET @mensajeTelefono = FORMATMESSAGE('Actualización de teléfono en sucursal: %s, %s. Teléfono antiguo: %s, Nuevo teléfono: %s',
-                                                  @ciudad, @localidad, @telefonoAntiguo, @nuevoTelefono);
-            EXEC registros.insertarLog 'importarSucursal', @mensajeTelefono;
-        END
-
-        FETCH NEXT FROM cur INTO @ciudad, @localidad, @nuevoHorario, @nuevoTelefono, @horarioAntiguo, @telefonoAntiguo;
-    END
-
-    CLOSE cur;
-    DEALLOCATE cur;
-END;
-GO
-
-
-
-
-
-
 
 
 CREATE OR ALTER TRIGGER supermercado.trg_AfterUpdate_Empleado
@@ -475,6 +413,8 @@ BEGIN
     DECLARE @direccionNueva NVARCHAR(100);
     DECLARE @emailPersonalAntiguo NVARCHAR(80);
     DECLARE @emailPersonalNuevo NVARCHAR(80);
+    DECLARE @emailEmpresaAntiguo NVARCHAR(80);
+    DECLARE @emailEmpresaNuevo NVARCHAR(80);
     DECLARE @cargoAntiguo NVARCHAR(20);
     DECLARE @cargoNuevo NVARCHAR(20);
     DECLARE @idSucursalAntiguo INT;
@@ -496,6 +436,8 @@ BEGIN
         CONVERT(NVARCHAR(100), DecryptByPassPhrase(@FraseClave, i.direccion)) AS direccionNueva,
         CONVERT(NVARCHAR(80), DecryptByPassPhrase(@FraseClave, d.email_personal)) AS emailPersonalAntiguo,
         CONVERT(NVARCHAR(80), DecryptByPassPhrase(@FraseClave, i.email_personal)) AS emailPersonalNuevo,
+        CONVERT(NVARCHAR(80), DecryptByPassPhrase(@FraseClave, d.email_empresa)) AS emailEmpresaAntiguo,
+        CONVERT(NVARCHAR(80), DecryptByPassPhrase(@FraseClave, i.email_empresa)) AS emailEmpresaNuevo,
         d.cargo AS cargoAntiguo,
         i.cargo AS cargoNuevo,
         d.idSucursal AS idSucursalAntiguo,
@@ -507,6 +449,7 @@ BEGIN
     WHERE 
         (i.direccion <> d.direccion) OR
         (i.email_personal <> d.email_personal) OR
+        (i.email_empresa <> d.email_empresa) OR -- Nueva condición para email de empresa
         (i.cargo <> d.cargo) OR
         (i.idSucursal <> d.idSucursal) OR
         (i.turno <> d.turno); -- Cambios en los campos relevantes
@@ -514,6 +457,7 @@ BEGIN
     OPEN cur;
     FETCH NEXT FROM cur INTO @legajo, @nombre, @apellido, @direccionAntigua, @direccionNueva,
                                @emailPersonalAntiguo, @emailPersonalNuevo,
+                               @emailEmpresaAntiguo, @emailEmpresaNuevo,
                                @cargoAntiguo, @cargoNuevo,
                                @idSucursalAntiguo, @idSucursalNuevo,
                                @turnoAntiguo, @turnoNuevo;
@@ -544,6 +488,13 @@ BEGIN
             EXEC registros.insertarLog 'importarEmpleado', @mensaje;
         END;
 
+        IF @emailEmpresaAntiguo <> @emailEmpresaNuevo
+        BEGIN
+            SET @mensaje = FORMATMESSAGE('Empleado legajo %d (%s %s): Email empresa antiguo: %s, Nuevo: %s',
+                                           @legajo, @nombre, @apellido, @emailEmpresaAntiguo, @emailEmpresaNuevo);
+            EXEC registros.insertarLog 'importarEmpleado', @mensaje;
+        END;
+
         IF @cargoAntiguo <> @cargoNuevo
         BEGIN
             SET @mensaje = FORMATMESSAGE('Empleado legajo %d (%s %s): Cargo antiguo: %s, Nuevo: %s',
@@ -567,6 +518,7 @@ BEGIN
 
         FETCH NEXT FROM cur INTO @legajo, @nombre, @apellido, @direccionAntigua, @direccionNueva,
                                    @emailPersonalAntiguo, @emailPersonalNuevo,
+                                   @emailEmpresaAntiguo, @emailEmpresaNuevo,
                                    @cargoAntiguo, @cargoNuevo,
                                    @idSucursalAntiguo, @idSucursalNuevo,
                                    @turnoAntiguo, @turnoNuevo;
@@ -580,32 +532,64 @@ GO
 
 
 
+
 --------------------------------------------------------------------------------------------------------
 --STORE PARA MODIFICAR DATOS DE LA SUCURSAL (NRO TELEFONO Y HORARIO)
 --------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE supermercado.ModificarDatosSucursal
-    @ciudad VARCHAR(40),
-    @localidad VARCHAR(40),
+    @idSucursal INT,  -- Recibe el ID de la sucursal
     @nuevoHorario VARCHAR(100) = NULL,  
-    @nuevoTelefono VARCHAR(20) = NULL     
+    @nuevoTelefono VARCHAR(20) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Actualizamos los campos horario y telefono solo si no son NULL
-    UPDATE supermercado.sucursal
-    SET 
-        horario = CASE WHEN @nuevoHorario IS NOT NULL THEN @nuevoHorario ELSE horario END,
-        telefono = CASE WHEN @nuevoTelefono IS NOT NULL THEN @nuevoTelefono ELSE telefono END
-    WHERE 
-        ciudad = @ciudad AND 
-        localidad = @localidad;
+    -- Declarar variable para el mensaje de log
+    DECLARE @mensajeLog NVARCHAR(1000);
 
-   --se modificó algo?
+    -- Verificamos si ambos parámetros son NULL
+    IF @nuevoHorario IS NULL AND @nuevoTelefono IS NULL
+    BEGIN
+        PRINT 'No se proporcionaron datos para actualizar.';
+        RETURN; -- No se hace ninguna actualización
+    END
+
+    -- Actualizamos los campos solo si no son NULL, y formateamos el mensaje de log
+    IF @nuevoHorario IS NOT NULL
+    BEGIN
+        -- Actualizamos el horario
+        UPDATE supermercado.sucursal
+        SET horario = @nuevoHorario
+        WHERE idSucursal = @idSucursal;
+
+        -- Verificamos si se actualizó el campo y registramos el log
+        IF @@ROWCOUNT > 0
+        BEGIN
+            SET @mensajeLog = FORMATMESSAGE('Se actualizó el horario de la sucursal con ID %d a: %s', @idSucursal, @nuevoHorario);
+            EXEC registros.insertarLog 'ActualizaciónSucursal', @mensajeLog;
+        END
+    END
+
+    IF @nuevoTelefono IS NOT NULL
+    BEGIN
+        -- Actualizamos el teléfono
+        UPDATE supermercado.sucursal
+        SET telefono = @nuevoTelefono
+        WHERE idSucursal = @idSucursal;
+
+        -- Verificamos si se actualizó el campo y registramos el log
+        IF @@ROWCOUNT > 0
+        BEGIN
+            SET @mensajeLog = FORMATMESSAGE('Se actualizó el teléfono de la sucursal con ID %d a: %s', @idSucursal, @nuevoTelefono);
+            EXEC registros.insertarLog 'ActualizaciónSucursal', @mensajeLog;
+        END
+    END
+
+    -- Verificamos si se realizó alguna modificación en los campos de la sucursal
     IF @@ROWCOUNT = 0
     BEGIN
-        PRINT 'No se encontró la sucursal especificada.';
+        PRINT 'No se encontró la sucursal especificada o no se realizaron cambios.';
     END
     ELSE
     BEGIN
@@ -616,32 +600,76 @@ GO
 
 
 
+
 --------------------------------------------------------------------------------------------------------
 --STORE PARA MODIFICACIÓN DE TABLA EMPLEADO 
 --------------------------------------------------------------------------------------------------------
 
 CREATE PROCEDURE supermercado.ModificarDatosEmpleado
     @legajo INT,
-    @direccionNueva VARCHAR(100) = NULL,
-    @emailPersonalNuevo VARCHAR(80) = NULL,
+    @direccionNueva NVARCHAR(256) = NULL,
+    @emailPersonalNuevo NVARCHAR(256) = NULL,
     @cargoNuevo VARCHAR(20) = NULL,
     @idSucursalNueva INT = NULL,  
-    @turnoNuevo VARCHAR(30) = NULL  
+    @turnoNuevo VARCHAR(30) = NULL,
+    @emailEmpresaNuevo NVARCHAR(256) = NULL,
+    @FraseClave NVARCHAR(128) -- Para cifrado y descifrado
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Actualizamos los campos solo si los parámetros no son NULL
+    -- Declaramos variables para almacenar los valores actuales descifrados
+    DECLARE @direccionActual NVARCHAR(256);
+    DECLARE @emailPersonalActual NVARCHAR(256);
+    DECLARE @emailEmpresaActual NVARCHAR(256);
+    DECLARE @cargoActual VARCHAR(20);
+    DECLARE @idSucursalActual INT;
+    DECLARE @turnoActual VARCHAR(30);
+
+    -- Desencriptamos los valores actuales de dirección, email personal, email empresa, cargo, idSucursal y turno
+    SELECT 
+        @direccionActual = CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClave, direccion)),
+        @emailPersonalActual = CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClave, email_personal)),
+        @emailEmpresaActual = CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClave, email_empresa)),
+        @cargoActual = cargo,
+        @idSucursalActual = idSucursal,
+        @turnoActual = turno
+    FROM 
+        supermercado.empleado
+    WHERE 
+        legajo = @legajo;
+
+    -- Verificamos si todos los parámetros son NULL. Si es así, no actualizamos ningún campo.
+    IF @direccionNueva IS NULL AND 
+       @emailPersonalNuevo IS NULL AND 
+       @emailEmpresaNuevo IS NULL AND 
+       @cargoNuevo IS NULL AND 
+       @idSucursalNueva IS NULL AND 
+       @turnoNuevo IS NULL
+    BEGIN
+        PRINT 'No se proporcionaron datos para actualizar.';
+        RETURN; -- No hacemos ninguna actualización
+    END
+
+    -- Actualizamos los valores solo si no son NULL, utilizando COALESCE para mantener los valores actuales si el parámetro es NULL
     UPDATE supermercado.empleado
     SET 
-        direccion = COALESCE(@direccionNueva, direccion),
-        email_personal = COALESCE(@emailPersonalNuevo, email_personal),
-        cargo = COALESCE(@cargoNuevo, cargo),
-        idSucursal = COALESCE(@idSucursalNueva, idSucursal),
-        turno = COALESCE(@turnoNuevo, turno)
-    WHERE legajo = @legajo;
+        direccion = CASE WHEN @direccionNueva IS NOT NULL 
+                         THEN EncryptByPassPhrase(@FraseClave, @direccionNueva) 
+                         ELSE direccion END,
+        email_personal = CASE WHEN @emailPersonalNuevo IS NOT NULL 
+                              THEN EncryptByPassPhrase(@FraseClave, @emailPersonalNuevo) 
+                              ELSE email_personal END,
+        email_empresa = CASE WHEN @emailEmpresaNuevo IS NOT NULL 
+                             THEN EncryptByPassPhrase(@FraseClave, @emailEmpresaNuevo) 
+                             ELSE email_empresa END,
+        cargo = CASE WHEN @cargoNuevo IS NOT NULL THEN @cargoNuevo ELSE cargo END,
+        idSucursal = CASE WHEN @idSucursalNueva IS NOT NULL THEN @idSucursalNueva ELSE idSucursal END,
+        turno = CASE WHEN @turnoNuevo IS NOT NULL THEN @turnoNuevo ELSE turno END
+    WHERE 
+        legajo = @legajo;
 
-    --se modificó algo? 
+    -- Verificamos si se realizó alguna modificación
     IF @@ROWCOUNT = 0
     BEGIN
         PRINT 'No se encontró el empleado especificado o no se realizaron cambios.';
@@ -654,6 +682,49 @@ END;
 GO
 
 
+--------------------------------------------------------------------------------------------------------
+--STORE PARA MODIFICACIÓN DEL PRECIO DEL PRODUCTO 
+--------------------------------------------------------------------------------------------------------
+
+
+CREATE OR ALTER PROCEDURE catalogo.ActualizarPrecioProducto
+    @IdProducto INT,           -- Parámetro para el id del producto
+    @NuevoPrecio DECIMAL(18, 2) -- Parámetro para el nuevo precio
+AS
+BEGIN
+    -- Variables locales
+    DECLARE @nombre NVARCHAR(200);    -- Para almacenar el nombre del producto
+    DECLARE @id_linea INT;            -- Para almacenar la línea del producto
+    DECLARE @mensajeInsercion VARCHAR(1000);  -- Mensaje de log
+
+    -- Obtener el nombre del producto y la línea antes de la actualización
+    SELECT @nombre = nombre, @id_linea = id_linea
+    FROM catalogo.producto
+    WHERE id = @IdProducto;
+
+    -- Actualiza el precio del producto con el id proporcionado
+    UPDATE catalogo.producto
+    SET Precio = @NuevoPrecio
+    WHERE id = @IdProducto;
+
+    -- Comprobar si el producto fue actualizado
+    IF @@ROWCOUNT = 0
+    BEGIN
+        PRINT 'No se encontró el producto con el id especificado.';
+    END
+    ELSE
+    BEGIN
+        -- Crear el mensaje para insertar en el log
+        SET @mensajeInsercion = FORMATMESSAGE('Producto con nombre %s, precio nuevo %s y línea %d', @nombre, CONVERT(VARCHAR(20), @NuevoPrecio, 1), @id_linea);
+        
+        -- Insertar el log
+        EXEC registros.insertarLog 'ModificacionProducto', @mensajeInsercion;
+
+        -- Mensaje de éxito
+        PRINT 'Precio del producto actualizado correctamente.';
+    END
+END;
+GO
 
 
 
