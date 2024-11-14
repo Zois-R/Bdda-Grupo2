@@ -94,9 +94,13 @@ RESULTADO ESPERADO: Que no nos deje insertar un empleado con legajo duplicado
 */
 
 EXEC supermercado.mostrarEmpleadosDesencriptados 
-    @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.',
+    @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.'
+
+EXEC supermercado.mostrarEmpleadosDesencriptadosDelGerente
+	@FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.',
     @idSucursalGerente = 2,
     @idEmpleado = 257032;
+
 ------------------------------
 select * from supermercado.empleado
 EXEC supermercado.insertarEmpleado
@@ -158,12 +162,12 @@ SELECT * FROM ventas.cliente
 ---------------------------------------------------------------------
 
 ---insercion  (nombreProducto, precio decimal, id  lal linea )
-catalogo.insertarProducto 'Samsumg Galaxy A03',150.00,150;
+exec catalogo.insertarProducto 'Samsumg Galaxy A03',150.00,150;
 select * from catalogo.producto order by id desc ;
 ---insersion pero no existe linea de producto
-catalogo.insertarProducto 'Samsumg Galaxy A04',160.00,160;
+exec catalogo.insertarProducto 'Samsumg Galaxy A04',160.00,160;
 ---no admite duplicados
-catalogo.insertarProducto 'Samsumg Galaxy A03',150.00,150;
+exec catalogo.insertarProducto 'Samsumg Galaxy A03',150.00,150;
 ---modificacion (no esta hecho)
 
 ---borrado (no esta hecho)
@@ -206,6 +210,33 @@ VALUES
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
     @nroFactura = '750-67-8428',    -- Número de factura de ejemplo
+    @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
+    @fecha = '1/5/2019',          -- Fecha de la venta
+    @hora = '13:08:00',             -- Hora de la venta
+    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
+    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
+    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
+    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
+    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
+    @genero = 'Male',          -- Género del cliente
+    @cuil = '20-12345678-9',        -- CUIL del cliente (dato ficticio)
+    @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
+go
+
+---------------------generar nuevas ventas 
+-- Primero, declaramos la tabla de tipo TipoProductosDetalle con los productos a insertar
+DECLARE @productosDetalle ventas.TipoProductosDetalle;
+
+-- Insertamos productos de prueba en la tabla de tipo
+INSERT INTO @productosDetalle (idProducto, idLineaProducto, precio, cantidad)
+VALUES
+    (1, 101, 100.00, 5555),  -- Producto 1, Línea 101, Precio 100.00, Cantidad 2
+    (2, 102, 50.00, 5555),   -- Producto 2, Línea 102, Precio 50.00, Cantidad 3
+    (3, 103, 30.00, 3444);   -- Producto 3, Línea 103, Precio 30.00, Cantidad 5
+
+-- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
+EXEC ventas.generar_venta_con_factura
+    @nroFactura = '751-67-8428',    -- Número de factura de ejemplo
     @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
     @fecha = '1/5/2019',          -- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
