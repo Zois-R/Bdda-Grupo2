@@ -47,16 +47,28 @@ create table registros.bitácora(
 go
 --------------------------------------------------------------------------
 
+CREATE TABLE supermercado.Comercio (
+    cuit NVARCHAR(20) , 
+    nombre_comercio nvarchar(30),           
+	razon_social  nvarchar(30),                 
+    email nvarchar(100)
+	constraint pk_comercio primary key clustered (cuit)
+);    
+go
+
+
 create table supermercado.sucursal 
 	(
 		id			int identity(1,1),
+		idComercio  nvarchar(20),
 		ciudad		varchar(40),
 		localidad   varchar(40),
 		direccion	varchar(150),
 		horario		varchar(100),
 		telefono	VARCHAR(20),
 		activo		bit default 1,-- para el borrado logico
-		constraint pk_sucursal primary key clustered (id)
+		constraint pk_sucursal primary key clustered (id),
+		constraint fk_empresa foreign key (idComercio) references supermercado.Comercio(cuit)
 	);
 go
 

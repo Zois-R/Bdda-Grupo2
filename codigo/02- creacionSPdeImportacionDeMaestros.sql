@@ -1,14 +1,16 @@
 ﻿USE COM5600G02
 GO
 
-CREATE OR ALTER PROCEDURE supermercado.importarSucursal @direccion VARCHAR(1000)
+
+CREATE OR ALTER PROCEDURE supermercado.importarSucursal 
+    @direccion VARCHAR(1000)
 AS
 BEGIN
-    -- Crear la tabla temporal
+    -- Crear la tabla temporal sin el campo idComercio
     CREATE TABLE #sucursal
     (
         ciudad         VARCHAR(40) COLLATE Latin1_General_CI_AI,
-        reemplazar     VARCHAR(40) COLLATE Latin1_General_CI_AI,
+        reemplazar     VARCHAR(40) COLLATE Latin1_General_CI_AI,  -- Asegúrate de que 'reemplazar' sea la columna correcta
         direccion      VARCHAR(150) COLLATE Latin1_General_CI_AI,
         horario        VARCHAR(100) COLLATE Latin1_General_CI_AI,
         telefono       VARCHAR(20) COLLATE Latin1_General_CI_AI
@@ -48,12 +50,19 @@ BEGIN
     DECLARE @countBefore INT, @countAfter INT;
     SELECT @countBefore = COUNT(*) FROM supermercado.sucursal;
 
+    -- Obtener el idComercio del único registro de la tabla Comercio
+    DECLARE @idComercio NVARCHAR(20);
+    SELECT @idComercio = cuit
+    FROM supermercado.Comercio
+    WHERE cuit IS NOT NULL;
+
     -- Insertar o actualizar en la tabla sucursal
     MERGE supermercado.sucursal AS act
     USING #sucursal AS source
     ON act.ciudad = source.ciudad 
-    AND act.localidad = source.reemplazar
+    AND act.localidad = source.reemplazar  -- Asegúrate de usar 'reemplazar' en lugar de 'localidad'
     AND act.direccion = source.direccion
+    AND act.idComercio = @idComercio -- Asignar idComercio directamente en el MERGE
     WHEN MATCHED AND (act.horario <> source.horario OR act.telefono <> source.telefono) THEN 
         -- Actualizar solo si el horario o el teléfono son distintos
         UPDATE SET 
@@ -61,8 +70,8 @@ BEGIN
             act.telefono = source.telefono
     WHEN NOT MATCHED THEN 
         -- Si no existe, insertar un nuevo registro
-        INSERT (ciudad, localidad, direccion, horario, telefono)
-        VALUES (source.ciudad, source.reemplazar, source.direccion, 
+        INSERT (idComercio, ciudad, localidad, direccion, horario, telefono)
+        VALUES (@idComercio, source.ciudad, source.reemplazar, source.direccion, 
                 source.horario, source.telefono);
 
     -- Contar registros en la tabla sucursal después del MERGE
@@ -72,17 +81,15 @@ BEGIN
     IF @countAfter > @countBefore
     BEGIN
         DECLARE @mensajeInsercion VARCHAR(1000);
-		SET @mensajeInsercion = FORMATMESSAGE('Inserción de %d nueva(s) sucursal(es)', @countAfter - @countBefore);
+        SET @mensajeInsercion = FORMATMESSAGE('Inserción de %d nueva(s) sucursal(es)', @countAfter - @countBefore);
     
-		EXEC registros.insertarLog 'importarSucursal', @mensajeInsercion;
+        EXEC registros.insertarLog 'importarSucursal', @mensajeInsercion;
     END
 
     -- Eliminar la tabla temporal
     DROP TABLE #sucursal;
 END;
 GO
-
-
 
 
 

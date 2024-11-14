@@ -19,6 +19,42 @@ GO
 
 
 
+
+CREATE OR ALTER PROCEDURE supermercado.insertarComercio
+    @cuit NVARCHAR(20),
+    @nombre_comercio NVARCHAR(30),
+    @razon_social NVARCHAR(30),
+    @email NVARCHAR(100)
+AS
+BEGIN
+    -- Verificar que ninguno de los campos sea NULL
+    IF @cuit IS NULL OR @nombre_comercio IS NULL OR @razon_social IS NULL OR @email IS NULL
+    BEGIN
+        PRINT 'Error: Ningún campo puede ser NULL. Todos los parámetros son obligatorios.';
+    END
+    ELSE
+    BEGIN
+        -- Verificar si ya existe un comercio con el mismo CUIT
+        IF EXISTS (SELECT 1 FROM supermercado.Comercio WHERE cuit = @cuit)
+        BEGIN
+            PRINT 'El CUIT ya está registrado en la base de datos.';
+        END
+        ELSE
+        BEGIN
+            -- Si no existe, insertar el nuevo comercio
+            INSERT INTO supermercado.Comercio (cuit, nombre_comercio, razon_social, email)
+            VALUES (@cuit, @nombre_comercio, @razon_social, @email);
+            
+            -- Registrar mensaje de inserción
+            PRINT 'Comercio insertado correctamente.';
+        END
+    END
+END;
+GO
+
+
+
+
 CREATE OR ALTER PROCEDURE supermercado.insertarSucursal
     @ciudad VARCHAR(40),
     @localidad VARCHAR(40),
@@ -29,6 +65,12 @@ AS
 BEGIN
     DECLARE @direccionExistente INT;
     DECLARE @telefonoExistente INT;
+    DECLARE @idComercio NVARCHAR(20);
+
+    -- Obtener el CUIT (idComercio) del único registro de la tabla Comercio
+    SELECT @idComercio = cuit
+    FROM supermercado.Comercio
+    WHERE cuit IS NOT NULL;
 
     -- Verificar si ya existe una sucursal con la misma dirección
     SET @direccionExistente = (SELECT COUNT(*) 
@@ -59,8 +101,8 @@ BEGIN
     ELSE
     BEGIN
         -- Si no existen duplicados, proceder a insertar la sucursal
-        INSERT INTO supermercado.sucursal (ciudad, localidad, direccion, horario, telefono)
-        VALUES (@ciudad, @localidad, @direccion, @horario, @telefono);
+        INSERT INTO supermercado.sucursal (idComercio, ciudad, localidad, direccion, horario, telefono)
+        VALUES (@idComercio, @ciudad, @localidad, @direccion, @horario, @telefono);
 
         -- Registro de inserción
         DECLARE @mensajeInsercion VARCHAR(1000);
@@ -70,7 +112,6 @@ BEGIN
     END;
 END;
 GO
-
 
 
 CREATE OR ALTER PROCEDURE supermercado.insertarEmpleado
@@ -169,6 +210,23 @@ BEGIN
     END;
 END;
 GO
+
+EXEC supermercado.insertarEmpleado
+    @legajo = 257230,                     -- Legajo que ya existe en la base de datos
+    @nombre = N'Juan',                   -- Nombre del empleado
+    @apellido = N'Perez',                -- Apellido del empleado
+    @dni = N'909457464',                  -- DNI del empleado
+    @direccion = N'Calle Falsa 123',    -- Dirección del empleado
+    @email_personal = N'kuanperez@gmail.com',  -- Correo personal
+    @email_empresa = N'kuan.perez@superA.com', -- Correo de empresa
+    @cargo = 'Cajero',                   -- Cargo del empleado
+    @idSucursal = 2,                     -- ID de la sucursal a la que pertenece el empleado
+    @turno = 'TM',                   -- Turno del empleado
+    @FraseClave = N'FraseSecreta123';    -- Frase clave para cifrado
+
+	select * from supermercado.empleado
+
+
 
 
 CREATE OR ALTER PROCEDURE catalogo.insertarProducto
@@ -270,7 +328,7 @@ GO
 
 
 
-CREATE PROCEDURE ventas.insertar_cliente
+CREATE or ALTER PROCEDURE ventas.insertar_cliente
     @cuil VARCHAR(20),
     @tipoCliente VARCHAR(15),
     @genero VARCHAR(15),
@@ -561,7 +619,7 @@ BEGIN
         -- Actualizamos el horario
         UPDATE supermercado.sucursal
         SET horario = @nuevoHorario
-        WHERE idSucursal = @idSucursal;
+        WHERE id = @idSucursal;
 
         -- Verificamos si se actualizó el campo y registramos el log
         IF @@ROWCOUNT > 0
@@ -576,7 +634,7 @@ BEGIN
         -- Actualizamos el teléfono
         UPDATE supermercado.sucursal
         SET telefono = @nuevoTelefono
-        WHERE idSucursal = @idSucursal;
+        WHERE id = @idSucursal;
 
         -- Verificamos si se actualizó el campo y registramos el log
         IF @@ROWCOUNT > 0
@@ -605,7 +663,7 @@ GO
 --STORE PARA MODIFICACIÓN DE TABLA EMPLEADO 
 --------------------------------------------------------------------------------------------------------
 
-CREATE PROCEDURE supermercado.ModificarDatosEmpleado
+CREATE or ALTER PROCEDURE supermercado.ModificarDatosEmpleado
     @legajo INT,
     @direccionNueva NVARCHAR(256) = NULL,
     @emailPersonalNuevo NVARCHAR(256) = NULL,

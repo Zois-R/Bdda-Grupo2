@@ -1,6 +1,14 @@
 ﻿use COM5600G02 
 go
 
+-- insertar registro en tabla de la empresa
+EXEC supermercado.insertarComercio 
+    @cuit = '20-12345678-9',
+    @nombre_comercio = 'Aurora',
+    @razon_social = 'Aurora S.A.',
+    @email = 'contacto@aurora.com.ar';
+go
+
 --ingresar el destino del archivo de imformacion complementaria.xlsx
 EXEC supermercado.importarSucursal 'C:\importar\Informacion_complementaria.xlsx';
 GO

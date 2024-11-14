@@ -125,20 +125,6 @@ go
 -- Cambiar los permisos asignados al rol.
 -- Cambiar la propiedad del rol.
 
-ALTER ROLE supervisor ADD MEMBER FranciscoLUCENA;
-go
-ALTER ROLE supervisor ADD MEMBER EduardoLUNA;
-go
-ALTER ROLE supervisor ADD MEMBER MauroLUNA;
-go
-ALTER ROLE supervisor ADD MEMBER EmilceMAIDANA;
-go
-ALTER ROLE supervisor ADD MEMBER GISELAMAIDANA;
-go
-ALTER ROLE supervisor ADD MEMBER FernandaMAIZARES;
-go
-
-
 	
 
 GRANT SELECT ON ventas.vista_factura_detalle TO supervisor;
@@ -146,7 +132,6 @@ go
 
 SELECT * FROM ventas.vista_factura_detalle;
 go
-
 
 
 
@@ -167,6 +152,120 @@ EXEC ventas.insertarNotaDeCredito
     @razon = 'devProd';--- 'devPago', 'devProd'
 go
 
+
+
+ALTER TABLE supermercado.empleado
+ADD usuario VARCHAR(50);
+GO
+
+
+CREATE OR ALTER PROCEDURE supermercado.sp_insertarUsuario
+    @legajo INT,
+    @usuario VARCHAR(50)
+AS
+BEGIN
+    -- Verificar si el empleado existe
+    IF NOT EXISTS (SELECT 1 FROM supermercado.empleado WHERE legajo = @legajo AND activo = 1)
+    BEGIN
+        PRINT 'Empleado no encontrado o inactivo';
+        RETURN;
+    END
+
+    -- Insertar el nombre de usuario en el campo 'usuario'
+    UPDATE supermercado.empleado
+    SET usuario = @usuario
+    WHERE legajo = @legajo;
+
+    PRINT 'Nombre de usuario insertado exitosamente';
+END;
+GO
+
+
+/*
+sp_addrolemember es un procedimiento almacenado en SQL Server que se usa para agregar 
+un usuario o grupo de usuarios a un rol específico dentro de la base de datos. 
+Cuando se ejecuta, concede permisos y privilegios a un usuario basados en el rol especificado. 
+Esto es especialmente útil para asignar permisos de seguridad 
+sin tener que configurarlos manualmente para cada usuario.
+
+Ejemplo de uso de sp_addrolemember:
+
+EXEC sp_addrolemember 'nombre_rol', 'nombre_usuario';
+'nombre_rol': Es el rol al cual se desea agregar el usuario (por ejemplo, cajero, supervisor, db_datareader, etc.).
+'nombre_usuario': Es el nombre del usuario que se quiere añadir a ese rol.
+*/
+
+
+CREATE OR ALTER PROCEDURE supermercado.sp_asignarRol
+    @legajo INT,
+    @usuario VARCHAR(50)
+AS
+BEGIN
+    -- Verificar si el empleado existe
+    IF NOT EXISTS (SELECT 1 FROM supermercado.empleado WHERE legajo = @legajo AND activo = 1)
+    BEGIN
+        PRINT 'Empleado no encontrado o inactivo';
+        RETURN;
+    END
+
+    -- Variable para almacenar el cargo del empleado
+    DECLARE @cargo VARCHAR(20);
+
+    -- Obtener el cargo del empleado
+    SELECT @cargo = cargo
+    FROM supermercado.empleado
+    WHERE legajo = @legajo;
+
+    -- Verificar y asignar el rol según el cargo
+    IF @cargo = 'Cajero'
+    BEGIN
+        -- Asignar rol 'cajero' al usuario
+        EXEC sp_addrolemember 'cajero', @usuario;
+        PRINT 'Rol cajero asignado';
+    END
+    ELSE IF @cargo = 'Supervisor'
+    BEGIN
+        -- Asignar rol 'supervisor' al usuario
+        EXEC sp_addrolemember 'supervisor', @usuario;
+        PRINT 'Rol supervisor asignado';
+    END
+    ELSE IF @cargo = 'Gerente de sucursal'
+    BEGIN
+        -- Asignar rol 'gerente' al usuario
+        EXEC sp_addrolemember 'gerente', @usuario;
+        PRINT 'Rol gerente asignado';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Cargo no válido para asignación de rol';
+        RETURN;
+    END
+
+    -- Actualizar el campo 'usuario' en la tabla 'empleado' con el nombre de usuario
+    UPDATE supermercado.empleado
+    SET usuario = @usuario
+    WHERE legajo = @legajo;
+
+    PRINT 'Usuario asignado exitosamente';
+END;
+GO
+
+
+
+/*
+ALTER ROLE supervisor ADD MEMBER FranciscoLUCENA;
+go
+ALTER ROLE supervisor ADD MEMBER EduardoLUNA;
+go
+ALTER ROLE supervisor ADD MEMBER MauroLUNA;
+go
+ALTER ROLE supervisor ADD MEMBER EmilceMAIDANA;
+go
+ALTER ROLE supervisor ADD MEMBER GISELAMAIDANA;
+go
+ALTER ROLE supervisor ADD MEMBER FernandaMAIZARES;
+go
+*/
 
 
 
@@ -233,13 +332,6 @@ go
 -- Cambiar los permisos asignados al rol.
 -- Cambiar la propiedad del rol.
 
-ALTER ROLE gerente ADD MEMBER OscarORTIZ;
-go
-ALTER ROLE gerente ADD MEMBER DeboraPACHTMAN;
-go
-ALTER ROLE gerente ADD MEMBER RominaPADILLA;
-go
-
 
 
 
@@ -297,19 +389,11 @@ go
 
 
 
-
-
-
-
-
-
-
 GRANT EXECUTE ON ventas.reporte_productos_menos_vendidos_mes TO gerente;
 go
 
 exec ventas.reporte_productos_menos_vendidos_mes 1, 2019;
 go
-
 
 
 
@@ -346,3 +430,14 @@ go
 	
 SELECT * FROM ventas.reporte_de_ventas
 go
+
+
+
+
+ALTER ROLE gerente ADD MEMBER OscarORTIZ;
+go
+ALTER ROLE gerente ADD MEMBER DeboraPACHTMAN;
+go
+ALTER ROLE gerente ADD MEMBER RominaPADILLA;
+go
+
