@@ -1,4 +1,4 @@
-DECLARE @RutaBase NVARCHAR(255) = 'C:\sqlarchivos\backup'; 
+DECLARE @RutaBase NVARCHAR(255) = 'C:\sqlarchivos\backup\'; 
 DECLARE @Query NVARCHAR(MAX); 
 DECLARE @RecoveryModel NVARCHAR(50);
 
