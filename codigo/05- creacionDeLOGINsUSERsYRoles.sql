@@ -276,7 +276,7 @@ CREATE ROLE cajero AUTHORIZATION DBA;
 go
 
 
-GRANT EXECUTE ON ventas.vista_de_registros_de_ventas TO cajero;
+GRANT SELECT ON ventas.vista_de_registros_de_ventas TO cajero;
 go
 --SELECT * FROM ventas.vista_de_registros_de_ventas;
 
@@ -474,53 +474,33 @@ go
 --select * from supermercado.empleado
 
 
-
-exec supermercado.asignarRol 257020
+ALTER ROLE cajero ADD MEMBER cajero1;
 go
-exec supermercado.asignarRol 257021
+ALTER ROLE cajero ADD MEMBER cajero2;
 go
-exec supermercado.asignarRol 257022
+ALTER ROLE cajero ADD MEMBER cajero3;
 go
-exec supermercado.asignarRol 257023
+ALTER ROLE cajero ADD MEMBER cajero4;
 go
-exec supermercado.asignarRol 257024
+ALTER ROLE cajero ADD MEMBER cajero5;
 go
-exec supermercado.asignarRol 257025
+ALTER ROLE cajero ADD MEMBER cajero6;
 go
-exec supermercado.asignarRol 257026
+ALTER ROLE supervisor ADD MEMBER supervisor1;
 go
-exec supermercado.asignarRol 257027
+ALTER ROLE supervisor ADD MEMBER supervisor2;
 go
-exec supermercado.asignarRol 257028
+ALTER ROLE supervisor ADD MEMBER supervisor3;
 go
-exec supermercado.asignarRol 257029
+ALTER ROLE supervisor ADD MEMBER supervisor4;
 go
-exec supermercado.asignarRol 257030
+ALTER ROLE supervisor ADD MEMBER supervisor5;
 go
-exec supermercado.asignarRol 257031
+ALTER ROLE supervisor ADD MEMBER supervisor6;
 go
-exec supermercado.asignarRol 257032
+ALTER ROLE gerente ADD MEMBER gerente1;
 go
-exec supermercado.asignarRol 257033
+ALTER ROLE gerente ADD MEMBER gerente2;
 go
-exec supermercado.asignarRol 257034
+ALTER ROLE gerente ADD MEMBER gerente3;
 go
-
-
-
-
-
-/*
-ALTER ROLE supervisor ADD MEMBER FranciscoLUCENA;
-go
-ALTER ROLE supervisor ADD MEMBER EduardoLUNA;
-go
-ALTER ROLE supervisor ADD MEMBER MauroLUNA;
-go
-ALTER ROLE supervisor ADD MEMBER EmilceMAIDANA;
-go
-ALTER ROLE supervisor ADD MEMBER GISELAMAIDANA;
-go
-ALTER ROLE supervisor ADD MEMBER FernandaMAIZARES;
-go
-*/

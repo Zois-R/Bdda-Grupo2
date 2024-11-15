@@ -597,7 +597,6 @@ END;
 GO
 
 
-
 --- este sp sirve para cifrar con una nueva frase clave, mandandole la anterior clave para que descifre antes de cifrar
 
 CREATE OR ALTER PROCEDURE supermercado.CambiarCifradoTablaEmpleado
@@ -616,48 +615,6 @@ BEGIN
         email_empresa = EncryptByPassPhrase(@FraseClaveNueva, CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClaveVieja, email_empresa)));
 END;
 GO
-
-
---- este sp solo descifra con la frase clave correcta
-
-CREATE OR ALTER PROCEDURE supermercado.DescifrarTablaEmpleado
-    @FraseClave NVARCHAR(128)
-AS
-BEGIN
-    -- Actualizar cada fila descifrando las columnas especificadas
-    UPDATE supermercado.empleado
-    SET 
-        nombre = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, nombre)),
-        apellido = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, apellido)),
-        dni = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, dni)),
-        direccion = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, direccion)),
-        email_personal = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, email_personal)),
-        email_empresa = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, email_empresa));
-END;
-GO
-
-
---- este sp cifra pero suponiendo que anteriormente fue descifrada
-
-CREATE OR ALTER PROCEDURE supermercado.CifrarTablaEmpleado
-    @FraseClave NVARCHAR(128)
-AS
-BEGIN
-    -- Actualizar cada fila cifrando las columnas especificadas directamente
-    UPDATE supermercado.empleado
-    SET 
-        nombre = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), nombre)),
-        apellido = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), apellido)),
-        dni = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), dni)),
-        direccion = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), direccion)),
-        email_personal = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), email_personal)),
-        email_empresa = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), email_empresa));
-END;
-GO
-
-
-
-
 
 
 
@@ -692,6 +649,10 @@ END;
 GO
 
 
+
+
+
+
 /*
 sp_addrolemember es un procedimiento almacenado en SQL Server que se usa para agregar 
 un usuario o grupo de usuarios a un rol específico dentro de la base de datos. 
@@ -704,7 +665,7 @@ Ejemplo de uso de sp_addrolemember:
 EXEC sp_addrolemember 'nombre_rol', 'nombre_usuario';
 'nombre_rol': Es el rol al cual se desea agregar el usuario (por ejemplo, cajero, supervisor, db_datareader, etc.).
 'nombre_usuario': Es el nombre del usuario que se quiere añadir a ese rol.
-*/
+
 
 CREATE OR ALTER PROCEDURE supermercado.asignarRol
     @legajo INT
@@ -771,6 +732,7 @@ BEGIN
 END;
 GO
 
+*/
 
 
 
