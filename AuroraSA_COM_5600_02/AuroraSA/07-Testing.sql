@@ -180,7 +180,7 @@ exec catalogo.insertarProducto 'Samsumg Galaxy A04',160.00,160;
 exec catalogo.insertarProducto 'Samsumg Galaxy A03',150.00,150;
 -- Modificar un producto existente , modificar precio
 exec catalogo.ActualizarPrecioProducto 6524,190.00;
-select * from catalogo.producto order by id desc 
+select * from catalogo.producto order by id desc ;
 
 
 
