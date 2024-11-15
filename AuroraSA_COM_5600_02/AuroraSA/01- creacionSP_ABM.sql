@@ -803,11 +803,10 @@ GO
 --------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE supermercado.borrado_logico_sucursal
-    @id INT,
-    @modulo NVARCHAR(50) = 'sucursal'
+    @id INT
 AS
 BEGIN
-    
+    declare @modulo NVARCHAR(50) = 'sucursal';
     UPDATE supermercado.sucursal
     SET activo = 0 --actualizamos el estado en 0
     WHERE id = @id;
@@ -836,10 +835,11 @@ GO
 --------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE ventas.borrado_logico_mediosDePago
-	@id INT,
-	@modulo NVARCHAR(50) = 'mediosDePago'
+	@id INT
 AS
 BEGIN 
+	declare @modulo NVARCHAR(50) = 'mediosDePago';
+
 	UPDATE ventas.mediosDePago
 	SET activo = 0
 	WHERE  id = @id;
@@ -867,11 +867,11 @@ GO
 
 
 CREATE OR ALTER PROCEDURE catalogo.borrado_logico_lineaDeProducto
-    @nombre NVARCHAR(100),  
-    @modulo NVARCHAR(50) = 'linea_de_producto'
+    @nombre NVARCHAR(100) 
+
 AS
 BEGIN
-    
+    declare @modulo NVARCHAR(50) = 'linea_de_producto';
     UPDATE catalogo.linea_de_producto
     SET activo = 0
     WHERE nombre = @nombre;
@@ -895,10 +895,10 @@ GO
 -- STORE PROCEDURE PARA HACER BORRADO LOGICO DE EMPLEADO POR LEGAJO
 ---------------------------------------------------------------------------------
 CREATE OR ALTER PROCEDURE supermercado.borrado_logico_empleado
-    @legajo INT, -- borra por el legajo
-    @modulo NVARCHAR(50) = 'empleado'
+    @legajo INT -- borra por el legajo
 AS
 BEGIN
+	declare @modulo NVARCHAR(50) = 'empleado';
     --ponemos en 0 el activo 
     UPDATE supermercado.empleado
     SET activo = 0
@@ -921,11 +921,10 @@ GO
 ----------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE catalogo.borrado_logico_producto
-    @id INT,                           -- ID del producto
-    @modulo NVARCHAR(50) = 'producto'
+    @id INT                           -- ID del producto
 AS
 BEGIN
-    
+    declare @modulo NVARCHAR(50) = 'producto';
     UPDATE catalogo.producto
     SET activo = 0
     WHERE id = @id;
