@@ -84,9 +84,11 @@ GO
 select * from supermercado.sucursal;
 ------------------actualizacion de sucursal
 EXEC supermercado.modificarDatosSucursal 
-	1,'horario 8 a.m- 8p.m','174-578-1235';
+	1,'horario 9 a.m- 10p.m','174-578-1235';
 GO
 select * from supermercado.sucursal;
+
+---------------
 
 use COM5600G02;
 ---------------------------------------------------------------------
