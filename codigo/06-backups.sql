@@ -1,44 +1,44 @@
-DECLARE @RutaBase NVARCHAR(255) = 'C:\backup\';
-DECLARE @Query NVARCHAR(MAX); 
-DECLARE @RecoveryModel NVARCHAR(50);
+---declaro todo al principio para poder hacer execute
+DECLARE @RutaBase NVARCHAR(255) = 'C:\sqlarchivos\backups\'; --poner siempre al final la barra \
+DECLARE @ejecutarbackup NVARCHAR(MAX); 
+DECLARE @recuperacion NVARCHAR(50);
 
-
+---uso sql dinamico para las consultas de backups
 -- ------------------ Backups full semanal ------------------ 
-SET @Query = 'BACKUP DATABASE Com5600G02 ' + 
-             'TO DISK = ''' + @RutaBase + 'Com5600G02_Full.bak'' ' + 
+SET @ejecutarbackup = 'BACKUP DATABASE Com5600G02 ' + 
+             'TO DISK = ''' + @RutaBase + 'backup_fullCOM5600G02.bak'' ' + 
              'WITH INIT, NAME = ''Backup Completo Semanal de Com5600G02'';'; 
-EXEC sp_executesql @Query; 
-
+EXEC sp_executesql @ejecutarbackup; 
 
 
 
 
 -- ------------------ Backups diferencial diario ------------------ 
-SET @Query = 'BACKUP DATABASE COM5600G02 ' + 
-             'TO DISK = ''' + @RutaBase + 'COM5600G02_Diff.bak'' ' + 
+SET @ejecutarbackup = 'BACKUP DATABASE COM5600G02 ' + 
+             'TO DISK = ''' + @RutaBase + 'backup_diffCOM5600G02.bak'' ' + 
              'WITH DIFFERENTIAL, NAME = ''Backup Diferencial Diario de COM5600G02'';'; 
-EXEC sp_executesql @Query; 
+EXEC sp_executesql @ejecutarbackup; 
 
 
 
 
 -- ------------------ Verificar y establecer el modelo de recuperacion en FULL ------------------
-----me aseguro que sea full para poder hacer el log trasanccion
-SELECT @RecoveryModel = recovery_model_desc 
+----me aseguro que sea full para poder hacer el log de transacciones
+SELECT @recuperacion = recovery_model_desc 
 FROM sys.databases 
 WHERE name = 'COM5600G02';
 
-IF @RecoveryModel <> 'FULL' 
+IF @recuperacion <> 'FULL' 
 BEGIN 
-    PRINT 'El modelo de recuperación no es FULL. Se cambiará a FULL.'; 
+    PRINT 'El modelo de recuperación no es FULL. Se cambia a FULL.'; 
     ALTER DATABASE COM5600G02  
     SET RECOVERY FULL; 
 
-   
-    SET @Query = 'BACKUP DATABASE COM5600G02 ' + 
-                 'TO DISK = ''' + @RutaBase + 'COM5600G02_Full_Initial.bak'' ' + 
-                 'WITH INIT, NAME = ''Backup Completo Inicial de COM5600G02 para asegurar consistencia'';'; 
-    EXEC sp_executesql @Query; 
+    -- Backup completo inicial
+    SET @ejecutarbackup = 'BACKUP DATABASE COM5600G02 ' + 
+                 'TO DISK = ''' + @RutaBase + 'backup_fullCOM5600G02.bak'' ' + 
+                 'WITH INIT, NAME = ''Backup Completo de COM5600G02 para asegurar consistencia'';'; 
+    EXEC sp_executesql @ejecutarbackup; 
 END 
 ELSE 
 BEGIN 
@@ -48,7 +48,8 @@ END;
 
 -- ------------------ Backup del log de transacciones ------------------
 
-SET @Query = 'BACKUP LOG COM5600G02 ' + 
-             'TO DISK = ''' + @RutaBase + 'COM5600G02_Log.bak'' ' + 
+SET @ejecutarbackup = 'BACKUP LOG COM5600G02 ' + 
+             'TO DISK = ''' + @RutaBase + 'backup_logCOM5600G02.bak'' ' + 
              'WITH INIT, NAME = ''Backup Log de Transacciones de COM5600G02'';'; 
-EXEC sp_executesql @Query; 
+EXEC sp_executesql @ejecutarbackup; 
+
