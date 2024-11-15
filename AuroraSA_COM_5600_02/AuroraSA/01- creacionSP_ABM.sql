@@ -376,6 +376,12 @@ BEGIN
     DECLARE @subtotal DECIMAL(10, 2);
     DECLARE @subtotalConIVA DECIMAL(10, 2);
 
+	IF NOT EXISTS (SELECT 1 FROM @productosDetalle)
+	BEGIN
+		PRINT('no hay producto asociado');
+		RETURN;
+	END
+
     -- Validar si el número de factura ya existe
     IF EXISTS (SELECT 1 FROM ventas.factura WHERE nroFactura = @nroFactura)
     BEGIN

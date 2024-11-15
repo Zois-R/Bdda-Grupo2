@@ -1,5 +1,5 @@
 ---declaro todo al principio para poder hacer execute
-DECLARE @RutaBase NVARCHAR(255) = 'C:\sqlarchivos\backups\'; --poner siempre al final la barra \
+DECLARE @RutaBase NVARCHAR(255) = 'C:\backup\'; --poner siempre al final la barra \
 DECLARE @ejecutarbackup NVARCHAR(MAX); 
 DECLARE @recuperacion NVARCHAR(50);
 

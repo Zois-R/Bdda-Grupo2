@@ -489,16 +489,17 @@ REVERT;
 
 --------------demostrar que solo el supervisor puede hacer las notas de credito 
 
-select * from ventas.detalleVenta order by idFactura desc;	--mostrar los
+select * from ventas.detalleVenta order by idFactura desc;	--mostrar los detalles de ventas a borrar
 
+select * from ventas.vista_de_registros_de_ventas;
 
 -----este es un supervisor
 EXECUTE AS LOGIN = 'supervisor1';						--este es un supervisor
 SELECT CURRENT_USER;										-- Muestra el actual login
-exec ventas.insertarNotaDeCredito 996,5271,'devProd';		--le tiene que dar los permisos
+exec ventas.insertarNotaDeCredito 851,142,'devProd';		--le tiene que dar los permisos
 REVERT;														--vuelve al login anterior, es decir, al de windows
 
-select * from ventas.notasDeCredito;
+select * from ventas.vista_de_notas_de_credito;
 
 -----este es un gerente
 EXECUTE AS LOGIN = 'gerente1';
