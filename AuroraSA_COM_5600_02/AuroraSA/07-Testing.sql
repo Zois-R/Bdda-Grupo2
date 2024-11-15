@@ -79,7 +79,6 @@ EXEC supermercado.insertarSucursal 'hong king',
 	'Juan Manuel de Rosas 14.457, Ruta 3 km 29 (1759) Gonzalez Catán' ,
 	'L a V 8 a. m. – 9 p. m. S y D 9 a. m. – 8 p. m.',
 	'1231-484-1532';
-
 GO
 select * from supermercado.sucursal;
 ------------------actualizacion de sucursal
@@ -179,9 +178,9 @@ select * from catalogo.producto order by id desc ;
 exec catalogo.insertarProducto 'Samsumg Galaxy A04',160.00,160;
 ---no admite duplicados
 exec catalogo.insertarProducto 'Samsumg Galaxy A03',150.00,150;
----modificacion (no esta hecho)
-
----borrado (no esta hecho)
+-- Modificar un producto existente , modificar precio
+exec catalogo.ActualizarPrecioProducto 6524,190.00;
+select * from catalogo.producto order by id desc 
 
 
 

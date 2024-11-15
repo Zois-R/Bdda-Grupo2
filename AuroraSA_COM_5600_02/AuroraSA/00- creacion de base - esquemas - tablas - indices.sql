@@ -143,7 +143,7 @@ create table ventas.factura
 		hora			time,
 		idMedio_de_pago	int,
 		idPago			varchar(50),
-		estadoDePago    char(17) default 'pagada', --- En espera de pago
+		estadoDePago    char(17) default 'pagada',
 		total			decimal(12,2),
 		totalConIva		decimal(12,2),
 		CONSTRAINT pk_Fact PRIMARY KEY CLUSTERED (id),

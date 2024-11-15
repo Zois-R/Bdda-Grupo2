@@ -440,12 +440,6 @@ go
 
 
 
-
-ALTER TABLE supermercado.empleado
-ADD usuario VARCHAR(50);
-GO
-
-
 exec supermercado.insertarUsuario 257020, cajero1
 go
 exec supermercado.insertarUsuario 257021, cajero2
