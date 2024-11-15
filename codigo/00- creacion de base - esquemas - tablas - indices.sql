@@ -216,6 +216,7 @@ la información de multiples productos como un parámetro al sp que inserta nuevas
 */
 
 --Lo usamos al insertar una venta
+
 CREATE TYPE ventas.TipoProductosDetalle AS TABLE (
     idProducto INT,
     cantidad SMALLINT

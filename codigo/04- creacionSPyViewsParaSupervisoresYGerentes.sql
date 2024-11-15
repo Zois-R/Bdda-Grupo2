@@ -3,6 +3,18 @@ go
 
 
 
+CREATE or ALTER VIEW catalogo.vista_Producto_Resumen AS
+SELECT 
+    id,
+    nombre,
+    Precio
+FROM 
+    catalogo.producto;
+GO
+
+
+
+
 CREATE or ALTER VIEW ventas.vista_de_registros_de_ventas AS
 SELECT  
     f.nroFactura as ID_Factura, 
@@ -615,7 +627,6 @@ BEGIN
         email_empresa = EncryptByPassPhrase(@FraseClaveNueva, CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClaveVieja, email_empresa)));
 END;
 GO
-
 
 
 

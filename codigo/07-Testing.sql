@@ -210,11 +210,11 @@ select * from ventas.detalleVenta
 DECLARE @productosDetalle ventas.TipoProductosDetalle;
 
 -- Insertamos productos de prueba en la tabla de tipo
-INSERT INTO @productosDetalle (idProducto, idLineaProducto, precio, cantidad)
+INSERT INTO @productosDetalle (idProducto, cantidad)
 VALUES
-    (1, 101, 100.00, 5555),  -- Producto 1, Línea 101, Precio 100.00, Cantidad 2
-    (2, 102, 50.00, 5555),   -- Producto 2, Línea 102, Precio 50.00, Cantidad 3
-    (3, 103, 30.00, 3444);   -- Producto 3, Línea 103, Precio 30.00, Cantidad 5
+    (1,1),  -- Producto 1,  Cantidad 2
+    (2,2),   -- Producto 2, Cantidad 3
+    (3,2);   -- Producto 3, Cantidad 5
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
@@ -237,15 +237,15 @@ go
 DECLARE @productosDetalle ventas.TipoProductosDetalle;
 
 -- Insertamos productos de prueba en la tabla de tipo
-INSERT INTO @productosDetalle (idProducto, idLineaProducto, precio, cantidad)
+INSERT INTO @productosDetalle (idProducto, cantidad)
 VALUES
-    (1, 101, 100.00, 5555),  -- Producto 1, Línea 101, Precio 100.00, Cantidad 2
-    (2, 102, 50.00, 5555),   -- Producto 2, Línea 102, Precio 50.00, Cantidad 3
-    (3, 103, 30.00, 3444);   -- Producto 3, Línea 103, Precio 30.00, Cantidad 5
+    (1,1),  -- Producto 1,  Cantidad 2
+    (2,2),   -- Producto 2, Cantidad 3
+    (3,2);   -- Producto 3, Cantidad 5
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
-    @nroFactura = '751-67-8428',    -- Número de factura de ejemplo
+    @nroFactura = '645-67-8528',    -- Número de factura de ejemplo
     @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
     @fecha = '1/5/2019',          -- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
@@ -258,6 +258,34 @@ EXEC ventas.generar_venta_con_factura
     @cuil = '20-12345678-9',        -- CUIL del cliente (dato ficticio)
     @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
 go
+select * from ventas.vista_de_registros_de_ventas where ID_Factura = '645-67-8528';
+---------------------generar nuevas ventas 
+-- probar que no pueda subir factura sin producto
+DECLARE @productosDetalle ventas.TipoProductosDetalle;
+
+-- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
+EXEC ventas.generar_venta_con_factura
+    @nroFactura = '456-57-8518',    -- Número de factura de ejemplo
+    @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
+    @fecha = '1/5/2019',          -- Fecha de la venta
+    @hora = '13:08:00',             -- Hora de la venta
+    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
+    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
+    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
+    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
+    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
+    @genero = 'Male',          -- Género del cliente
+    @cuil = '20-12345678-9',        -- CUIL del cliente (dato ficticio)
+    @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
+go
+
+select * from ventas.vista_de_registros_de_ventas where ID_Factura='456-67-8428';
+select * from ventas.factura where nroFactura = '456-67-8428'
+select * from ventas.vista_de_registros_de_ventas;
+
+
+
+
 
 ---------------------------------------------------------------------
 --TEST GENERAR NOTA DE CREDITO
@@ -304,10 +332,11 @@ select * from catalogo.producto order by id desc;
 GO
 EXEC ventas.importarVentas_registradas 'C:\importar\nuevosDatos\Ventas_registradas_2.csv';
 go
+
 select * from ventas.factura order by id desc;
 select * from ventas.detalleVenta order by id desc;
 select * from catalogo.producto order by id desc;
-
+select * from ventas.vista_de_registros_de_ventas;
 
 ---------------------------------------------------------------------
 --TEST REPORTES  , entrega 4
@@ -341,12 +370,12 @@ select * from catalogo.producto order by id desc;   ---!!!!!OJO PRIMERO VER EL P
 
 -- Insertamos productos de prueba en la tabla de tipo
 DECLARE @productosDetalle ventas.TipoProductosDetalle;
-INSERT INTO @productosDetalle (idProducto, idLineaProducto, precio, cantidad)
-VALUES (6529, 150, 600.00, 2)   
+INSERT INTO @productosDetalle (idProducto, cantidad)
+VALUES (6529, 2)   
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
-    @nroFactura = '750-67-8424',    -- Número de factura de ejemplo
+    @nroFactura = '750-67-8425',    -- Número de factura de ejemplo
     @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
     @fecha = '14/11/2024',          -- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
@@ -371,40 +400,170 @@ select * from supermercado.empleado;
 --------------mostrar los empleados desencriptados 
 EXEC supermercado.mostrarEmpleadosDesencriptados 
     @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.';
+go
 
-	
---------------demostrar que solo el supervisor puede hacer las notas de credito  (FALTA HACER )
+
+
+
+
+
+
+
+---------------------------------logins , usuarios y roles 
+
 use COM5600G02;
 use master
+--------------demostrar que solo el supervisor puede hacer las notas de credito  (FALTA HACER )
+go
+
+--------primero ejecutamos con cajero
+EXECUTE AS LOGIN = 'cajero1';						
+SELECT CURRENT_USER;
+
+
+----ver lo productos que tengo
+select * from catalogo.vista_Producto_Resumen;
+
+DECLARE @productosDetalle ventas.TipoProductosDetalle;
+INSERT INTO @productosDetalle (idProducto, cantidad)
+VALUES (6520, 5)   
+
+-- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
+EXEC ventas.generar_venta_con_factura
+    @nroFactura = '750-67-2026',    -- Número de factura de ejemplo
+    @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
+    @fecha = '14/11/2024',          -- Fecha de la venta
+    @hora = '13:08:00',             -- Hora de la venta
+    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
+    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
+    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
+    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
+    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
+    @genero = 'Male',          -- Género del cliente
+    @cuil = '20-12345678-7',        -- CUIL del cliente (dato ficticio)
+    @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
+go
+
+select * from ventas.vista_de_registros_de_ventas where ID_Factura = '750-67-2026';
+
+REVERT;		
+
+
+-----------luego lo probamos con un supervisor 
+EXECUTE AS LOGIN = 'supervisor1';						
+SELECT CURRENT_USER;
+
+DECLARE @productosDetalle ventas.TipoProductosDetalle;
+INSERT INTO @productosDetalle (idProducto, cantidad)
+VALUES (6528, 1)   
+
+-- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
+EXEC ventas.generar_venta_con_factura
+    @nroFactura = '750-67-8426',    -- Número de factura de ejemplo
+    @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
+    @fecha = '14/11/2024',          -- Fecha de la venta
+    @hora = '13:08:00',             -- Hora de la venta
+    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
+    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
+    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
+    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
+    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
+    @genero = 'Male',          -- Género del cliente
+    @cuil = '20-12345678-7',        -- CUIL del cliente (dato ficticio)
+    @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
+go
+
+select * from ventas.vista_de_registros_de_ventas where ID_Factura = '750-67-8426';
+
+REVERT;		
+
+
+
+
+
+
+
+
+--------------demostrar que solo el supervisor puede hacer las notas de credito 
 
 select * from ventas.detalleVenta order by idFactura desc;	--mostrar los
+
+
 -----este es un supervisor
-EXECUTE AS LOGIN = 'FranciscoLUCENA';						--este es un supervisor
+EXECUTE AS LOGIN = 'supervisor1';						--este es un supervisor
 SELECT CURRENT_USER;										-- Muestra el actual login
-exec ventas.insertarNotaDeCredito 999,1625,'devProd';		--le tiene que dar los permisos
+exec ventas.insertarNotaDeCredito 996,89,'devProd';		--le tiene que dar los permisos
 REVERT;														--vuelve al login anterior, es decir, al de windows
 
 -----este es un gerente
-EXECUTE AS LOGIN = 'OscarORTIZ';
+EXECUTE AS LOGIN = 'gerente1';
 SELECT CURRENT_USER;				-- Muestra el actual login
 exec ventas.insertarNotaDeCredito 999,1625,'devProd';	
 REVERT;			
 
 
+
+
+
+
+
 --------------demostrar que solo el gerente puede hacer los reportes 
 
 -----este es un gerente
-EXECUTE AS LOGIN = 'OscarORTIZ';
+EXECUTE AS LOGIN = 'gerente1';
 SELECT CURRENT_USER;				-- Muestra el actual login
 exec ventas.reporte_productos_menos_vendidos_mes 1, 2019;
 REVERT;								--vuelve al login anterior, es decir, al de windows
 
 -----este es un supervisor
-EXECUTE AS LOGIN = 'FranciscoLUCENA';
+EXECUTE AS LOGIN = 'supervisor1';
 SELECT CURRENT_USER;				-- Muestra el actual login
 exec ventas.reporte_productos_menos_vendidos_mes 1, 2019;
 REVERT;		
 
 
+
+
+
+
+
+
+
+
+
+---------------- ver roles de la DB y usuarios asignados
+use COM5600G02;
+SELECT    roles.principal_id                            AS RolePrincipalID
+    ,    roles.name                                    AS RolePrincipalName
+    ,    database_role_members.member_principal_id    AS MemberPrincipalID
+    ,    members.name                                AS MemberPrincipalName
+FROM sys.database_role_members AS database_role_members  
+JOIN sys.database_principals AS roles  
+    ON database_role_members.role_principal_id = roles.principal_id  
+JOIN sys.database_principals AS members  
+    ON database_role_members.member_principal_id = members.principal_id;  
+GO
+
+-------- ver permisos dados a los roles 
+SELECT
+    perms.state_desc AS State,
+    permission_name AS [Permission],
+    obj.name AS [on Object],
+    dp.name AS [to User Name]
+FROM sys.database_permissions AS perms
+JOIN sys.database_principals AS dp
+    ON perms.grantee_principal_id = dp.principal_id
+JOIN sys.objects AS obj
+    ON perms.major_id = obj.object_id;
+
+
+
 -----------la prueba de back-up esta en otro archivo
+
+
+declare @mostrar VARBINARY(256);
+
+set @mostrar = CONVERT(VARCHAR(256), 'el texto prohibido');
+
+print @mostrar
 
