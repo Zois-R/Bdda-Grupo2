@@ -137,10 +137,9 @@ VARIABLES DE ENTRADA:
     - @categoría: 'aceite_vinagre_y_sal'
 RESULTADO ESPERADO: Que no nos deje insertar una categoría repetda
 */
-
-EXEC catalogo.insertarLinea_de_producto @nombre = 'Almacen',@categoría = 'aceite_vinagre_y_sal'
-
-
+EXEC catalogo.insertarLinea_de_producto @nombre = 'Almacen',@categoría = 'aceite_vinagre_y_sal';
+select * from catalogo.linea_de_producto order by id desc;
+select * from catalogo.linea_de_producto where categoria =  'aceite_vinagre_y_sal';
 ---------------------------------------------------------------------
 --TEST INSERCIÓN CLIENTE
 ---------------------------------------------------------------------
@@ -180,7 +179,7 @@ exec catalogo.insertarProducto 'Samsumg Galaxy A04',160.00,160;
 exec catalogo.insertarProducto 'Samsumg Galaxy A03',150.00,150;
 -- Modificar un producto existente , modificar precio
 exec catalogo.ActualizarPrecioProducto 6524,190.00;
-select * from catalogo.producto order by id desc ;
+select * from catalogo.producto order by id desc;
 
 
 
@@ -219,7 +218,7 @@ VALUES
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
-    @nroFactura = '750-67-8428',    -- Número de factura de ejemplo
+    @nroFactura = '750-67-8415',    -- Número de factura de ejemplo
     @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
     @fecha = '1/5/2019',          -- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
@@ -266,7 +265,7 @@ DECLARE @productosDetalle ventas.TipoProductosDetalle;
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
-    @nroFactura = '456-57-8518',    -- Número de factura de ejemplo
+    @nroFactura = '456-57-8528',    -- Número de factura de ejemplo
     @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
     @fecha = '1/5/2019',          -- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
@@ -295,12 +294,12 @@ select * from ventas.vista_de_registros_de_ventas;
 select * from ventas.detalleVenta order by id desc;
 select * from ventas.factura order by id desc;
 ------- test se debe insertar correctamente la nota de credito en la tabla y no debe duplicarse
-exec ventas.insertarNotaDeCredito 1004,6529,'devProd';
+exec ventas.insertarNotaDeCredito 45,877,'devProd';
 select * from ventas.notasDeCredito;
-------- se verfica que el idFactura sea correcto
+------- se verfica que el idFactura sea correcto ,dando una factura incorrecta
 exec ventas.insertarNotaDeCredito 2201,6529,'devProd';
 ------- se verfica que el producto sea correcto a pesar que el idFactura sea correcto
-exec ventas.insertarNotaDeCredito 1005,2015,'devProd';
+exec ventas.insertarNotaDeCredito 1000,2015,'devProd';
 
 
 ---------------------------------------------------------------------
@@ -315,6 +314,9 @@ GO
 EXEC supermercado.importarEmpleados 'C:\importar\nuevosDatos\Informacion_complementaria_2.xlsx', 'La vida es como la RAM, todo es temporal y nada se queda.';
 GO
 select * from supermercado.empleado;
+GO
+EXEC supermercado.mostrarEmpleadosDesencriptados 
+    @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.'
 GO
 --actualizacion y ingreso de nuevas lineas de producto por archivo
 EXEC catalogo.importarLinea_de_producto 'C:\importar\nuevosDatos\Informacion_complementaria_2.xlsx';
@@ -493,8 +495,10 @@ select * from ventas.detalleVenta order by idFactura desc;	--mostrar los
 -----este es un supervisor
 EXECUTE AS LOGIN = 'supervisor1';						--este es un supervisor
 SELECT CURRENT_USER;										-- Muestra el actual login
-exec ventas.insertarNotaDeCredito 996,89,'devProd';		--le tiene que dar los permisos
+exec ventas.insertarNotaDeCredito 996,5271,'devProd';		--le tiene que dar los permisos
 REVERT;														--vuelve al login anterior, es decir, al de windows
+
+select * from ventas.notasDeCredito;
 
 -----este es un gerente
 EXECUTE AS LOGIN = 'gerente1';
@@ -561,10 +565,4 @@ JOIN sys.objects AS obj
 
 -----------la prueba de back-up esta en otro archivo
 
-
-declare @mostrar VARBINARY(256);
-
-set @mostrar = CONVERT(VARCHAR(256), 'el texto prohibido');
-
-print @mostrar
 
