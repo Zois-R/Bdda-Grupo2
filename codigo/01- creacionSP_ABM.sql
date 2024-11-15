@@ -372,6 +372,12 @@ BEGIN
     DECLARE @clienteExistente BIT;
 
 	--Validar el nro de factura no exista en la tabla factura, si existe hago un return sino ejecuta
+	IF NOT EXISTS (SELECT 1 FROM @productosDetalle)
+    BEGIN
+		print('no hay producto asociado')
+        RETURN;
+    END
+
 
 	IF EXISTS (SELECT 1 FROM ventas.factura WHERE nroFactura = @nroFactura)
     BEGIN

@@ -276,7 +276,7 @@ CREATE ROLE cajero AUTHORIZATION DBA;
 go
 
 
-GRANT EXECUTE ON ventas.vista_de_registros_de_ventas TO cajero;
+GRANT SELECT ON ventas.vista_de_registros_de_ventas TO cajero;
 go
 --SELECT * FROM ventas.vista_de_registros_de_ventas;
 

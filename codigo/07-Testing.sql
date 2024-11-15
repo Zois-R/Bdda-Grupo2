@@ -259,6 +259,34 @@ EXEC ventas.generar_venta_con_factura
     @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
 go
 
+---------------------generar nuevas ventas 
+-- probar que no pueda subir factura sin producto
+DECLARE @productosDetalle ventas.TipoProductosDetalle;
+
+-- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
+EXEC ventas.generar_venta_con_factura
+    @nroFactura = '456-57-8518',    -- Número de factura de ejemplo
+    @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
+    @fecha = '1/5/2019',          -- Fecha de la venta
+    @hora = '13:08:00',             -- Hora de la venta
+    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
+    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
+    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
+    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
+    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
+    @genero = 'Male',          -- Género del cliente
+    @cuil = '20-12345678-9',        -- CUIL del cliente (dato ficticio)
+    @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
+go
+
+select * from ventas.vista_de_registros_de_ventas where ID_Factura='456-67-8428';
+select * from ventas.factura where nroFactura = '456-67-8428'
+
+
+
+
+
+
 ---------------------------------------------------------------------
 --TEST GENERAR NOTA DE CREDITO
 ---------------------------------------------------------------------
@@ -377,15 +405,17 @@ EXEC supermercado.mostrarEmpleadosDesencriptados
 use COM5600G02;
 use master
 
+
+
 select * from ventas.detalleVenta order by idFactura desc;	--mostrar los
 -----este es un supervisor
-EXECUTE AS LOGIN = 'FranciscoLUCENA';						--este es un supervisor
+EXECUTE AS LOGIN = 'supervisor1';						--este es un supervisor
 SELECT CURRENT_USER;										-- Muestra el actual login
-exec ventas.insertarNotaDeCredito 999,1625,'devProd';		--le tiene que dar los permisos
+exec ventas.insertarNotaDeCredito 996,89,'devProd';		--le tiene que dar los permisos
 REVERT;														--vuelve al login anterior, es decir, al de windows
 
 -----este es un gerente
-EXECUTE AS LOGIN = 'OscarORTIZ';
+EXECUTE AS LOGIN = 'gerente1';
 SELECT CURRENT_USER;				-- Muestra el actual login
 exec ventas.insertarNotaDeCredito 999,1625,'devProd';	
 REVERT;			
@@ -394,16 +424,44 @@ REVERT;
 --------------demostrar que solo el gerente puede hacer los reportes 
 
 -----este es un gerente
-EXECUTE AS LOGIN = 'OscarORTIZ';
+EXECUTE AS LOGIN = 'gerente1';
 SELECT CURRENT_USER;				-- Muestra el actual login
 exec ventas.reporte_productos_menos_vendidos_mes 1, 2019;
 REVERT;								--vuelve al login anterior, es decir, al de windows
 
 -----este es un supervisor
-EXECUTE AS LOGIN = 'FranciscoLUCENA';
+EXECUTE AS LOGIN = 'supervisor1';
 SELECT CURRENT_USER;				-- Muestra el actual login
 exec ventas.reporte_productos_menos_vendidos_mes 1, 2019;
 REVERT;		
+
+
+
+---------------- ver roles de la DB y usuarios asignados
+use COM5600G02;
+SELECT    roles.principal_id                            AS RolePrincipalID
+    ,    roles.name                                    AS RolePrincipalName
+    ,    database_role_members.member_principal_id    AS MemberPrincipalID
+    ,    members.name                                AS MemberPrincipalName
+FROM sys.database_role_members AS database_role_members  
+JOIN sys.database_principals AS roles  
+    ON database_role_members.role_principal_id = roles.principal_id  
+JOIN sys.database_principals AS members  
+    ON database_role_members.member_principal_id = members.principal_id;  
+GO
+
+-------- ver permisos dados a los roles 
+SELECT
+    perms.state_desc AS State,
+    permission_name AS [Permission],
+    obj.name AS [on Object],
+    dp.name AS [to User Name]
+FROM sys.database_permissions AS perms
+JOIN sys.database_principals AS dp
+    ON perms.grantee_principal_id = dp.principal_id
+JOIN sys.objects AS obj
+    ON perms.major_id = obj.object_id;
+
 
 
 -----------la prueba de back-up esta en otro archivo
