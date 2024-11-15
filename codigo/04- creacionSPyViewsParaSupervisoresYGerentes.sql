@@ -1,42 +1,49 @@
 use COM5600G02;
 go
 
---- esta vista se une con tabla cliente....no muestra datos de tablas que tengan el id de cliente en null
-CREATE or ALTER VIEW ventas.vista_factura_detalle AS
-SELECT 
-    f.id AS IdFactura, 
-    f.nroFactura, 
-    f.tipo_Factura, 
-    f.fecha, 
-    f.hora, 
-    f.idMedio_de_pago, 
-    f.idPago, 
-    f.estadoDePago,
-    d.id AS idDetalle_venta, 
-    d.idProducto, 
-    p.id_linea AS LineaDeProducto, 
-    d.subtotal, 
-    d.cant, 
-    d.precio, 
-    s.localidad, 
-    c.tipo_cliente, 
-    c.genero,
-    v.idEmpleado AS legajoEmpleado
+
+
+CREATE or ALTER VIEW ventas.vista_de_registros_de_ventas AS
+SELECT  
+    f.nroFactura as ID_Factura, 
+    f.tipo_Factura as Tipo_de_factura, 
+    f.fecha as Fecha, 
+    f.hora as Hora, 
+    mp.nombre as Medio_de_pago,
+	f.idPago as identificadorDePago,
+	s.idComercio as CuitEmpresa,
+	p.nombre as Producto,
+	lp.nombre as Linea_de_Producto,
+	d.precio as Precio_unitario,
+    d.cant as Cantidad, 
+	d.subtotal,
+	f.total as Total,
+	f.totalConIva as ConIva,
+	c.cuil as idCliente,
+    c.tipo_cliente as Tipo_de_cliente, 
+    c.genero as Genero,
+    v.idEmpleado as Empleado,
+    s.localidad as Sucursal
 FROM 
     ventas.factura f 
 JOIN 
     ventas.detalleVenta d ON f.id = d.idFactura
 JOIN 
     ventas.registro_de_ventas v ON f.id = v.idFactura 
-JOIN
-	catalogo.producto p ON d.idProducto = p.id
 JOIN 
     supermercado.sucursal s ON v.idSucursal = s.id
 JOIN 
     supermercado.empleado e ON v.idEmpleado = e.legajo
+JOIN
+	catalogo.producto p ON d.idProducto = p.id
+JOIN
+	catalogo.linea_de_producto lp ON p.id_linea = lp.id
+JOIN 
+	ventas.mediosDePago mp ON f.idMedio_de_pago = mp.id
 LEFT JOIN
 	ventas.cliente c ON v.idCliente = c.id;
 go
+
 
 
 
@@ -101,21 +108,57 @@ GO
 
 
 
---------------------------------------------------------------------------------------------------------
--- TOTAL FACTURADO EN EL MES POR DIA DE LA SEMANA
---------------------------------------------------------------------------------------------------------
+CREATE or ALTER VIEW ventas.vista_de_notas_de_credito AS
+SELECT  
+    f.nroFactura as ID_Factura, 
+    f.tipo_Factura as Tipo_de_factura, 
+    f.fecha as FechaDeVenta, 
+    f.hora as Hora, 
+    mp.nombre as Medio_de_pago,
+	f.idPago as identificadorDePago,
+	s.idComercio as CuitEmpresa,
+	v.idEmpleado as Cajero,
+	p.nombre as Producto,
+	d.precio as Precio_unitario,
+    d.cant as Cantidad, 
+	d.subtotal,
+	f.total as Total,
+	f.totalConIva as ConIva,
+	c.cuil as idCliente,
+    c.tipo_cliente as Tipo_de_cliente,
+    s.localidad as Sucursal,
+	nc.id as nroDeNotaDeCredito,
+	nc.fecha as FechaDevolucion,
+	nc.monto as Perdida,
+	nc.razon as Devolucion
+FROM 
+    ventas.factura f 
+JOIN 
+    ventas.detalleVenta d ON f.id = d.idFactura
+JOIN 
+    ventas.registro_de_ventas v ON f.id = v.idFactura 
+JOIN 
+    supermercado.sucursal s ON v.idSucursal = s.id
+JOIN 
+	catalogo.producto p ON d.idProducto = p.id
+JOIN 
+	ventas.mediosDePago mp ON f.idMedio_de_pago = mp.id
+LEFT JOIN
+	ventas.cliente c ON v.idCliente = c.id
+JOIN
+	ventas.notasDeCredito nc ON d.id = nc.idDetalleVenta;
+go
 
-CREATE OR ALTER PROCEDURE ventas.TotalFacturadoPorDiaSemana
-    @mes INT,
-    @anio INT
+
+
+
+
+CREATE OR ALTER PROCEDURE supermercado.obtenerValorDivisa
+    @ValorDivisa DECIMAL(8, 2) OUTPUT  -- Parámetro de salida para devolver el valor de la divisa
 AS
 BEGIN
-    -- Configuración de formato para devolver los nombres de días en español
-    SET LANGUAGE Spanish;
-
     DECLARE @WinHttpObject INT;
     DECLARE @ResponseJsonText VARCHAR(8000);
-    DECLARE @ValorDivisa DECIMAL(8, 2); -- Variable para almacenar el valor de la divisa
 
     -- Crear objeto HTTP
     EXEC sp_OACreate 'WinHttp.WinHttpRequest.5.1', @WinHttpObject OUT;
@@ -135,18 +178,58 @@ BEGIN
     -- Verificar si la respuesta es un JSON válido
     IF ISJSON(@ResponseJsonText) = 1
     BEGIN
-        -- Inicializar la variable @ValorDivisa con el valor de 'venta'
+        -- Inicializar la variable @ValorDivisa con el valor de 'venta' desde el JSON
         SET @ValorDivisa = CAST(JSON_VALUE(@ResponseJsonText, '$.venta') AS DECIMAL(8, 2));
     END
     ELSE
     BEGIN
-        -- Abortar el procedimiento
+        -- Abortar el procedimiento y asignar un valor por defecto si el JSON no es válido
         PRINT 'La respuesta no es un JSON válido';
+        SET @ValorDivisa = NULL;  -- Asignar NULL o un valor por defecto
         RETURN;
-    END;
+    END
+END;
+GO
 
-    -- Calcular el total facturado por día de la semana
-    WITH FacturacionSemana AS (
+
+/*
+DECLARE @Divisa DECIMAL(8, 2);
+
+-- Llamar al procedimiento y obtener el valor de la divisa
+EXEC supermercado.obtenerValorDivisa @ValorDivisa = @Divisa OUTPUT;
+
+-- Mostrar el valor obtenido
+PRINT @Divisa;
+*/
+
+--------------------------------------------------------------------------------------------------------
+-- TOTAL FACTURADO EN EL MES POR DIA DE LA SEMANA
+--------------------------------------------------------------------------------------------------------
+
+
+CREATE OR ALTER PROCEDURE ventas.TotalFacturadoPorDiaSemana
+    @mes INT,
+    @anio INT
+AS
+BEGIN
+    -- Configuración de formato para devolver los nombres de días en español
+    SET LANGUAGE Spanish;
+
+    -- Declarar una variable para almacenar el valor de la divisa
+    DECLARE @ValorDivisa DECIMAL(8, 2);
+
+    -- Llamar al procedimiento supermercado.obtenerValorDivisa para obtener el valor de la divisa
+    EXEC supermercado.obtenerValorDivisa @ValorDivisa OUTPUT;
+
+    -- Verificar si la divisa es NULL (indicando que la respuesta no fue válida)
+    IF @ValorDivisa IS NULL
+    BEGIN
+        PRINT 'No se pudo obtener el valor de la divisa o el JSON es inválido';
+        RETURN;
+    END
+
+    -- Agregar punto y coma antes del WITH para evitar el error de sintaxis
+    ;WITH FacturacionSemana AS (
         SELECT 
             DATENAME(weekday, f.fecha) AS DiaSemana,
             SUM(f.totalConIva - ISNULL(nc.monto, 0)) AS TotalFacturado
@@ -171,83 +254,6 @@ GO
 
 
 
-/*
-CREATE or ALTER PROCEDURE ventas.TotalFacturadoPorDiaSemana
-    @mes INT,
-    @anio INT
-AS
-BEGIN
-	-- Configuración de formato para devolver los nombres de días en español
-    SET LANGUAGE Spanish;
-
-	DECLARE @WinHttpObject INT;
-    DECLARE @ResponseJsonText VARCHAR(8000);
-    DECLARE @Venta DECIMAL(8, 2); -- Variable para almacenar el valor de 'venta'
-
-    -- Crear objeto HTTP
-    EXEC sp_OACreate 'WinHttp.WinHttpRequest.5.1', @WinHttpObject OUT;
-
-    -- Configurar la solicitud
-    EXEC sp_OAMethod @WinHttpObject, 'open', NULL, 'GET', 'https://dolarapi.com/v1/dolares/blue';
-
-    -- Enviar la solicitud
-    EXEC sp_OAMethod @WinHttpObject, 'send';
-
-    -- Obtener la respuesta en formato JSON
-    EXEC sp_OAMethod @WinHttpObject, 'responseText', @ResponseJsonText OUTPUT;
-
-    -- Destruir el objeto HTTP
-    EXEC sp_OADestroy @WinHttpObject;
-
-    -- Verificar si la respuesta es un JSON válido
-    IF ISJSON(@ResponseJsonText) = 1
-    BEGIN
-        -- Inicializar la variable @Venta con el valor de 'venta'
-        SET @Venta = CAST(JSON_VALUE(@ResponseJsonText, '$.venta') AS DECIMAL(8, 2));
-    END
-	ELSE
-	BEGIN
-		-- Abortar el procedimiento
-		PRINT 'La respuesta no es un JSON válido';
-		return
-	END;
-
-    -- Consulta para calcular el total facturado por día de la semana, considerando las notas de crédito
-    WITH FacturacionSemana AS (
-        SELECT 
-            DATENAME(weekday, f.fecha) AS DiaSemana,
-            SUM(d.subtotal - ISNULL(nc.monto, 0)) AS TotalFacturado,
-            DATEPART(weekday, f.fecha) AS DiaNumero
-        FROM 
-            ventas.factura AS f
-        JOIN 
-            ventas.detalleVenta AS d ON f.id = d.idFactura
-        LEFT JOIN 
-            ventas.notasDeCredito AS nc 
-                ON nc.idFactura = f.id AND nc.idProducto = d.idProducto
-        WHERE 
-            MONTH(f.fecha) = @mes
-            AND YEAR(f.fecha) = @anio
-        GROUP BY 
-            DATENAME(weekday, f.fecha), DATEPART(weekday, f.fecha)
-    )
-    SELECT 
-        DiaSemana, 
-        TotalFacturado,
-        (TotalFacturado * @Venta) AS EnPesosArgentinos
-    FROM 
-        FacturacionSemana
-    ORDER BY 
-        DiaNumero -- Ordena numéricamente por el día de la semana (1-7)
-    FOR XML AUTO, ROOT('Reporte');
-END
-GO
-*/
-
-
-
-
-
 --------------------------------------------------------------------------------------------------------
 -- TOTAL FACTURADO POR TURNOS DE TRABAJO EN EL MES EN UN TRIMESTRE DEL AÑO
 --------------------------------------------------------------------------------------------------------
@@ -260,37 +266,11 @@ BEGIN
 	-- Configuración de formato para devolver los nombres en español
     SET LANGUAGE Spanish;
 
-	DECLARE @WinHttpObject INT;
-    DECLARE @ResponseJsonText VARCHAR(8000);
-    DECLARE @Venta DECIMAL(8, 2); -- Variable para almacenar el valor de 'venta'
+	-- Declarar una variable para almacenar el valor de la divisa
+    DECLARE @ValorDivisa DECIMAL(8, 2);
 
-    -- Crear objeto HTTP
-    EXEC sp_OACreate 'WinHttp.WinHttpRequest.5.1', @WinHttpObject OUT;
-
-    -- Configurar la solicitud
-    EXEC sp_OAMethod @WinHttpObject, 'open', NULL, 'GET', 'https://dolarapi.com/v1/dolares/blue';
-
-    -- Enviar la solicitud
-    EXEC sp_OAMethod @WinHttpObject, 'send';
-
-    -- Obtener la respuesta en formato JSON
-    EXEC sp_OAMethod @WinHttpObject, 'responseText', @ResponseJsonText OUTPUT;
-
-    -- Destruir el objeto HTTP
-    EXEC sp_OADestroy @WinHttpObject;
-
-    -- Verificar si la respuesta es un JSON válido
-    IF ISJSON(@ResponseJsonText) = 1
-    BEGIN
-        -- Inicializar la variable @Venta con el valor de 'venta'
-        SET @Venta = CAST(JSON_VALUE(@ResponseJsonText, '$.venta') AS DECIMAL(8, 2));
-    END
-	ELSE
-	BEGIN
-		-- Abortar el procedimiento
-		PRINT 'La respuesta no es un JSON válido';
-		return
-	END;
+    -- Llamar al procedimiento supermercado.obtenerValorDivisa para obtener el valor de la divisa
+    EXEC supermercado.obtenerValorDivisa @ValorDivisa OUTPUT;
 
     -- Declarar variables para los límites del trimestre
     DECLARE @FechaInicio DATE, @FechaFin DATE;
@@ -328,105 +308,12 @@ BEGIN
     GROUP BY MONTH(f.fecha), e.turno, DATENAME(MONTH, f.fecha)
 	)
 	SELECT Mes, Turno, MesNombre, Facturacion, 
-				(Facturacion * @Venta) AS EnPesosArgentinos
+				(Facturacion * @ValorDivisa) AS EnPesosArgentinos
 	FROM Factura
     ORDER BY Mes, Turno
     FOR XML PATH('Reporte'), ROOT('FacturacionTrimestral');
 END;
 go
-
-
-/*
-CREATE or ALTER PROCEDURE ventas.reporte_trimestral_facturacion
-    @Trimestre INT,
-    @Anio INT
-AS
-BEGIN
-	-- Configuración de formato para devolver los nombres en español
-    SET LANGUAGE Spanish;
-
-	DECLARE @WinHttpObject INT;
-    DECLARE @ResponseJsonText VARCHAR(8000);
-    DECLARE @Venta DECIMAL(8, 2); -- Variable para almacenar el valor de 'venta'
-
-    -- Crear objeto HTTP
-    EXEC sp_OACreate 'WinHttp.WinHttpRequest.5.1', @WinHttpObject OUT;
-
-    -- Configurar la solicitud
-    EXEC sp_OAMethod @WinHttpObject, 'open', NULL, 'GET', 'https://dolarapi.com/v1/dolares/blue';
-
-    -- Enviar la solicitud
-    EXEC sp_OAMethod @WinHttpObject, 'send';
-
-    -- Obtener la respuesta en formato JSON
-    EXEC sp_OAMethod @WinHttpObject, 'responseText', @ResponseJsonText OUTPUT;
-
-    -- Destruir el objeto HTTP
-    EXEC sp_OADestroy @WinHttpObject;
-
-    -- Verificar si la respuesta es un JSON válido
-    IF ISJSON(@ResponseJsonText) = 1
-    BEGIN
-        -- Inicializar la variable @Venta con el valor de 'venta'
-        SET @Venta = CAST(JSON_VALUE(@ResponseJsonText, '$.venta') AS DECIMAL(8, 2));
-    END
-	ELSE
-	BEGIN
-		-- Abortar el procedimiento
-		PRINT 'La respuesta no es un JSON válido';
-		return
-	END;
-
-    -- Declarar variables para los límites del trimestre
-    DECLARE @FechaInicio DATE, @FechaFin DATE;
-
-    -- Establecer las fechas de inicio y fin del trimestre
-    SET @FechaInicio = CASE @Trimestre
-                          WHEN 1 THEN CONCAT(@Anio, '-01-01')
-                          WHEN 2 THEN CONCAT(@Anio, '-04-01')
-                          WHEN 3 THEN CONCAT(@Anio, '-07-01')
-                          WHEN 4 THEN CONCAT(@Anio, '-10-01')
-                       END;
-
-    SET @FechaFin = CASE @Trimestre
-                       WHEN 1 THEN CONCAT(@Anio, '-03-31')
-                       WHEN 2 THEN CONCAT(@Anio, '-06-30')
-                       WHEN 3 THEN CONCAT(@Anio, '-09-30')
-                       WHEN 4 THEN CONCAT(@Anio, '-12-31')
-                    END;
-
-    -- Generar el reporte en XML usando el modo AUTO
-	WITH Factura AS (
-    SELECT 
-        MONTH(f.fecha) AS Mes,
-        e.turno AS Turno,
-        DATENAME(MONTH, f.fecha) AS MesNombre,
-        SUM(d.subtotal) - COALESCE(SUM(n.monto), 0) AS Facturacion
-    FROM ventas.factura f
-    JOIN ventas.detalleVenta d ON f.id = d.idFactura
-    LEFT JOIN ventas.notasDeCredito n 
-        ON f.id = n.idFactura 
-        AND d.idProducto = n.idProducto
-    JOIN ventas.ventas_registradas vr ON f.id = vr.idFactura
-    JOIN supermercado.empleado e ON vr.idEmpleado = e.legajo
-    WHERE f.fecha BETWEEN @FechaInicio AND @FechaFin
-      AND f.estadoDePago = 'pagada'
-    GROUP BY MONTH(f.fecha), e.turno, DATENAME(MONTH, f.fecha)
-	)
-	SELECT Mes, Turno, MesNombre, Facturacion, 
-				(Facturacion * @Venta) AS EnPesosArgentinos
-	INTO #Reporte
-	FROM Factura
-    ORDER BY Mes, Turno
-    -- Devolver el reporte en XML usando el modo AUTO
-    SELECT * FROM #Reporte
-    FOR XML AUTO, ROOT('FacturacionTrimestral');
-
-    -- Eliminar la tabla temporal después de generar el reporte
-    DROP TABLE #Reporte;
-END;
-go
-*/
 
 
 
@@ -455,30 +342,6 @@ BEGIN
     FOR XML PATH('Producto'), ROOT('ReporteProductosVendidos');
 END
 GO
-
-
-/*
-CREATE or ALTER PROCEDURE ventas.reporte_producto_vendido_rango_fecha
-    @FechaIni DATE,
-    @FechaFinal DATE
-AS
-BEGIN
-    -- Generar reporte en XML excluyendo productos con notas de crédito y la razón "devolución de pago"
-    SELECT 
-        p.nombre AS Producto,
-        SUM(d.cant) AS CantidadVendida
-    FROM ventas.detalleVenta d
-    JOIN ventas.factura f ON d.idFactura = f.id
-    JOIN catalogo.producto p ON d.idProducto = p.id
-    LEFT JOIN ventas.notasDeCredito nc ON nc.idFactura = f.id AND nc.idProducto = d.idProducto
-    WHERE f.fecha BETWEEN @FechaIni AND @FechaFinal
-    AND (nc.id IS NULL OR nc.razon != 'devolución de pago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
-    GROUP BY p.nombre
-    ORDER BY CantidadVendida DESC
-    FOR XML AUTO, ROOT('ReporteProductosVendidos');
-END
-go
-*/
 
 
 
@@ -510,33 +373,6 @@ BEGIN
     FOR XML PATH('Venta'), ROOT('ReporteProductosVendidosPorSucursal');
 END
 GO
-
-/*
-CREATE or ALTER PROCEDURE ventas.reporte_producto_vendido_rango_fecha_sucursal
-    @FechaIni DATE,
-    @FechaFinal DATE
-AS
-BEGIN
-    -- Generar reporte en XML excluyendo productos con notas de crédito y la razón "devolución de pago"
-    SELECT 
-        s.localidad AS Sucursal,
-        p.nombre AS Producto,
-        SUM(d.cant) AS CantidadVendida
-    FROM ventas.detalleVenta d
-    JOIN ventas.factura f ON d.idFactura = f.id
-    JOIN catalogo.producto p ON d.idProducto = p.id
-    JOIN ventas.ventas_registradas r ON d.idFactura = r.idFactura  -- Ahora se obtiene el idSucursal de la tabla 'registradas'
-    JOIN supermercado.sucursal s ON r.idSucursal = s.id   -- El idSucursal está en 'registradas'
-    LEFT JOIN ventas.notasDeCredito nc ON nc.idFactura = f.id AND nc.idProducto = d.idProducto
-    WHERE f.fecha BETWEEN @FechaIni AND @FechaFinal
-    AND (nc.id IS NULL OR nc.razon != 'devolución de pago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
-    GROUP BY s.localidad, p.nombre
-    ORDER BY CantidadVendida DESC
-    FOR XML AUTO, ROOT('ReporteProductosVendidosPorSucursal');
-END
-GO
-
-*/
 
 
 
@@ -573,36 +409,6 @@ BEGIN
 END;
 GO
 
-/*
-CREATE OR ALTER PROCEDURE ventas.reporte_productos_mas_vendidos_por_semana
-    @Mes INT,  -- Mes en formato MM (1-12)
-    @Anio INT   -- Año en formato YYYY
-AS
-BEGIN
-    -- Generar reporte en XML para los 5 productos más vendidos por semana en un mes
-    WITH ProductosPorSemana AS (
-        SELECT 
-            p.nombre AS Producto,
-            SUM(d.cant) AS CantidadVendida,
-            DATEPART(WEEK, f.fecha) AS Semana
-        FROM ventas.detalleVenta d
-        JOIN ventas.factura f ON d.idFactura = f.id
-        JOIN catalogo.producto p ON d.idProducto = p.id
-        WHERE MONTH(f.fecha) = @Mes
-          AND YEAR(f.fecha) = @Anio
-        GROUP BY p.nombre, DATEPART(WEEK, f.fecha)
-    )
-    SELECT TOP 5
-        Producto,
-        Semana,
-        CantidadVendida
-    FROM ProductosPorSemana
-    ORDER BY CantidadVendida DESC
-    FOR XML AUTO, ROOT('ReporteProductosPorSemana');
-END
-GO
-*/
-
 
 
 --------------------------------------------------------------------------------------------------------
@@ -629,30 +435,6 @@ BEGIN
 END
 GO
 
-/*
-CREATE OR ALTER PROCEDURE ventas.reporte_productos_menos_vendidos_mes
-    @Mes INT,  -- Mes en formato MM (1-12)
-    @Anio INT   -- Año en formato YYYY
-AS
-BEGIN
-    -- Generar reporte en XML para los 5 productos menos vendidos en un mes
-    SELECT TOP 5
-        p.nombre AS Producto,
-        SUM(d.cant) AS CantidadVendida
-    FROM ventas.detalleVenta d
-    JOIN ventas.factura f ON d.idFactura = f.id
-    JOIN catalogo.producto p ON d.idProducto = p.id
-    WHERE MONTH(f.fecha) = @Mes
-      AND YEAR(f.fecha) = @Anio
-    GROUP BY p.nombre
-    ORDER BY CantidadVendida ASC  -- Ordenar de menor a mayor cantidad vendida
-    FOR XML AUTO, ROOT('ReporteProductosMenosVendidos');
-END
-GO
-*/
-
-
-
 
 
 --------------------------------------------------------------------------------------------------------
@@ -664,37 +446,11 @@ CREATE OR ALTER PROCEDURE ventas.reporte_total_acumulado_ventas
     @SucursalID INT
 AS
 BEGIN
-	DECLARE @WinHttpObject INT;
-    DECLARE @ResponseJsonText VARCHAR(8000);
-    DECLARE @Venta DECIMAL(8, 2); -- Variable para almacenar el valor de 'venta'
+	-- Declarar una variable para almacenar el valor de la divisa
+    DECLARE @ValorDivisa DECIMAL(8, 2);
 
-    -- Crear objeto HTTP
-    EXEC sp_OACreate 'WinHttp.WinHttpRequest.5.1', @WinHttpObject OUT;
-
-    -- Configurar la solicitud
-    EXEC sp_OAMethod @WinHttpObject, 'open', NULL, 'GET', 'https://dolarapi.com/v1/dolares/blue';
-
-    -- Enviar la solicitud
-    EXEC sp_OAMethod @WinHttpObject, 'send';
-
-    -- Obtener la respuesta en formato JSON
-    EXEC sp_OAMethod @WinHttpObject, 'responseText', @ResponseJsonText OUTPUT;
-
-    -- Destruir el objeto HTTP
-    EXEC sp_OADestroy @WinHttpObject;
-
-    -- Verificar si la respuesta es un JSON válido
-    IF ISJSON(@ResponseJsonText) = 1
-    BEGIN
-        -- Inicializar la variable @Venta con el valor de 'venta'
-        SET @Venta = CAST(JSON_VALUE(@ResponseJsonText, '$.venta') AS DECIMAL(8, 2));
-    END
-	ELSE
-	BEGIN
-		-- Abortar el procedimiento
-		PRINT 'La respuesta no es un JSON válido';
-		return
-	END;
+    -- Llamar al procedimiento supermercado.obtenerValorDivisa para obtener el valor de la divisa
+    EXEC supermercado.obtenerValorDivisa @ValorDivisa OUTPUT;
 
     ;WITH VentasPorProducto AS (
         SELECT 
@@ -719,9 +475,9 @@ BEGIN
         vp.Producto AS 'Producto',               -- Nombre del producto
         vp.CantidadVendida AS 'CantidadVendida',  -- Total de productos vendidos
         vp.TotalVenta AS 'TotalVenta',           -- Total de ventas por producto
-		(vp.TotalVenta * @Venta) AS EnPesosArgentinos,
+		(vp.TotalVenta * @ValorDivisa) AS EnPesosArgentinos,
         ta.TotalVentas AS 'AcumuladoTotalVentas', -- Total acumulado de todas las ventas
-		(TotalVentas * @Venta) AS TotalEnPesosArgentinos
+		(TotalVentas * @ValorDivisa) AS TotalEnPesosArgentinos
     FROM VentasPorProducto vp
     CROSS JOIN TotalVentasAcumulado ta
     ORDER BY vp.TotalVenta DESC
@@ -729,83 +485,12 @@ BEGIN
 END
 GO
 
-/*
-CREATE OR ALTER PROCEDURE ventas.reporte_total_acumulado_ventas
-    @Fecha DATE,
-    @SucursalID INT
-AS
-BEGIN
-	DECLARE @WinHttpObject INT;
-    DECLARE @ResponseJsonText VARCHAR(8000);
-    DECLARE @Venta DECIMAL(8, 2); -- Variable para almacenar el valor de 'venta'
 
-    -- Crear objeto HTTP
-    EXEC sp_OACreate 'WinHttp.WinHttpRequest.5.1', @WinHttpObject OUT;
-
-    -- Configurar la solicitud
-    EXEC sp_OAMethod @WinHttpObject, 'open', NULL, 'GET', 'https://dolarapi.com/v1/dolares/blue';
-
-    -- Enviar la solicitud
-    EXEC sp_OAMethod @WinHttpObject, 'send';
-
-    -- Obtener la respuesta en formato JSON
-    EXEC sp_OAMethod @WinHttpObject, 'responseText', @ResponseJsonText OUTPUT;
-
-    -- Destruir el objeto HTTP
-    EXEC sp_OADestroy @WinHttpObject;
-
-    -- Verificar si la respuesta es un JSON válido
-    IF ISJSON(@ResponseJsonText) = 1
-    BEGIN
-        -- Inicializar la variable @Venta con el valor de 'venta'
-        SET @Venta = CAST(JSON_VALUE(@ResponseJsonText, '$.venta') AS DECIMAL(8, 2));
-    END
-	ELSE
-	BEGIN
-		-- Abortar el procedimiento
-		PRINT 'La respuesta no es un JSON válido';
-		return
-	END;
-
-    ;WITH VentasPorProducto AS (
-        SELECT 
-            p.nombre AS Producto,               -- Nombre del producto
-            SUM(d.cant) AS CantidadVendida,     -- Total de productos vendidos
-            SUM(d.cant * p.precio) AS TotalVenta -- Total de ventas por producto
-        FROM ventas.detalleVenta d
-        JOIN ventas.factura f ON d.idFactura = f.id
-        JOIN catalogo.producto p ON d.idProducto = p.id
-        JOIN ventas.ventas_registradas r ON d.idFactura = r.idFactura
-        LEFT JOIN ventas.notasDeCredito nc ON nc.idFactura = f.id AND nc.idProducto = d.idProducto
-        AND (nc.id IS NULL OR nc.razon != 'devolución de pago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
-        WHERE f.fecha <= @Fecha
-          AND r.idSucursal = @SucursalID  -- Filtro por sucursal
-        GROUP BY p.nombre
-    ),
-    TotalVentasAcumulado AS (
-        SELECT SUM(TotalVenta) AS TotalVentas
-        FROM VentasPorProducto
-    )
-    SELECT 
-        vp.Producto,
-        vp.CantidadVendida,
-        vp.TotalVenta, 
-		(vp.TotalVenta * @Venta) AS EnPesosArgentinos,
-        ta.TotalVentas AS AcumuladoTotalVentas, -- Total acumulado de todas las ventas
-		(vp.TotalVenta * @Venta) AS TotalEnPesosArgentinos
-    FROM VentasPorProducto vp
-    CROSS JOIN TotalVentasAcumulado ta
-    ORDER BY vp.TotalVenta DESC
-    FOR XML AUTO, ROOT('ReporteVentasPorSucursal');
-END
-GO
-*/
-
---------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 -- MOSTRAR EMPLEADOS DESENCRIPTADOS SOLO DE LA SUCURSAL DEL GERENTE QUE LO SOLICITA
---------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 
-CREATE OR ALTER PROCEDURE supermercado.mostrarEmpleadosDesencriptados
+CREATE OR ALTER PROCEDURE supermercado.mostrarEmpleadosDesencriptadosDelGerente
     @FraseClave NVARCHAR(128),
     @idSucursalGerente INT,  -- Parámetro para la sucursal del gerente
     @idEmpleado INT          -- Si se requiere el legajo o ID del empleado
@@ -969,3 +654,126 @@ BEGIN
         email_empresa = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), email_empresa));
 END;
 GO
+
+
+
+
+
+
+
+
+
+
+CREATE OR ALTER PROCEDURE supermercado.insertarUsuario
+    @legajo INT,
+    @usuario VARCHAR(50)
+AS
+BEGIN
+    -- Verificar si el empleado existe
+    IF NOT EXISTS (SELECT 1 FROM supermercado.empleado WHERE legajo = @legajo AND activo = 1)
+    BEGIN
+        PRINT 'Empleado no encontrado o inactivo';
+        RETURN;
+    END
+
+    -- Insertar el nombre de usuario en el campo 'usuario'
+    UPDATE supermercado.empleado
+    SET usuario = @usuario
+    WHERE legajo = @legajo;
+
+    PRINT 'Nombre de usuario insertado exitosamente';
+
+	-- Registrar la acción en el log
+    DECLARE @mensajeInsercion VARCHAR(1000);
+    SET @mensajeInsercion = FORMATMESSAGE('Empleado con legajo %d y usuario %s insertado.', @legajo, @usuario);
+    
+    EXEC registros.insertarLog 'Inserción de usuario para empleado', @mensajeInsercion;
+END;
+GO
+
+
+/*
+sp_addrolemember es un procedimiento almacenado en SQL Server que se usa para agregar 
+un usuario o grupo de usuarios a un rol específico dentro de la base de datos. 
+Cuando se ejecuta, concede permisos y privilegios a un usuario basados en el rol especificado. 
+Esto es especialmente útil para asignar permisos de seguridad 
+sin tener que configurarlos manualmente para cada usuario.
+
+Ejemplo de uso de sp_addrolemember:
+
+EXEC sp_addrolemember 'nombre_rol', 'nombre_usuario';
+'nombre_rol': Es el rol al cual se desea agregar el usuario (por ejemplo, cajero, supervisor, db_datareader, etc.).
+'nombre_usuario': Es el nombre del usuario que se quiere añadir a ese rol.
+*/
+
+CREATE OR ALTER PROCEDURE supermercado.asignarRol
+    @legajo INT
+AS
+BEGIN
+    -- Verificar si el empleado existe, está activo y tiene un usuario asignado
+    IF NOT EXISTS (SELECT 1 FROM supermercado.empleado WHERE legajo = @legajo AND activo = 1 AND usuario IS NOT NULL)
+    BEGIN
+        PRINT 'Empleado no encontrado, inactivo o sin usuario asignado';
+        RETURN;
+    END
+
+    -- Variables para almacenar datos del empleado
+    DECLARE @cargo VARCHAR(20);
+    DECLARE @usuario VARCHAR(50);
+    DECLARE @rol VARCHAR(50);
+
+    -- Obtener el cargo y el usuario del empleado
+    SELECT @cargo = cargo,
+           @usuario = usuario
+    FROM supermercado.empleado
+    WHERE legajo = @legajo;
+
+    -- Verificar que el usuario no sea NULL
+    IF @usuario IS NULL
+    BEGIN
+        PRINT 'El empleado con legajo ' + CAST(@legajo AS VARCHAR(10)) + ' no tiene un usuario asignado';
+        RETURN;
+    END
+
+    -- Determinar el rol según el cargo del empleado
+    SET @rol = CASE 
+                    WHEN @cargo = 'Cajero' THEN 'cajero'
+                    WHEN @cargo = 'Supervisor' THEN 'supervisor'
+                    WHEN @cargo = 'Gerente de sucursal' THEN 'gerente'
+                    ELSE NULL 
+               END;
+
+    -- Validar que el rol sea válido
+    IF @rol IS NOT NULL
+    BEGIN
+        -- Verificar si el usuario ya es miembro del rol
+        IF NOT EXISTS (
+            SELECT 1 
+            FROM sys.database_role_members rm
+            JOIN sys.database_principals p ON rm.member_principal_id = p.principal_id
+            JOIN sys.database_principals r ON rm.role_principal_id = r.principal_id
+            WHERE p.name = @usuario AND r.name = @rol
+        )
+        BEGIN
+            -- Asignar el rol al usuario si no es miembro
+            EXEC sp_addrolemember @rol, @usuario;
+            PRINT 'Rol ' + @rol + ' asignado exitosamente al usuario ' + @usuario;
+        END
+        ELSE
+        BEGIN
+            PRINT 'El usuario ' + @usuario + ' ya es miembro del rol ' + @rol;
+        END
+    END
+    ELSE
+    BEGIN
+        PRINT 'Cargo no válido para asignación de rol para el legajo ' + CAST(@legajo AS VARCHAR(10));
+    END
+END;
+GO
+
+
+
+
+
+
+

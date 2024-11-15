@@ -1,8 +1,12 @@
+--------------------------------------------------------------------------------------------------------
+-- CREACION DE LOGINs
+--------------------------------------------------------------------------------------------------------
+
+
 USE master;
 GO
 
 
--- Crear el LOGIN 'DBA' en el servidor con una contraseña "ridícula"
 CREATE LOGIN DBA  
 WITH PASSWORD = 'WhySoSerious?!', 
      CHECK_EXPIRATION = OFF, 
@@ -10,329 +14,312 @@ WITH PASSWORD = 'WhySoSerious?!',
 
 --- en propiedades, voy a seguridad, y coloco la opcion de SQL SERVER AND WINDOWA AUTHENTICATION MODE
 
--- Asignar el rol 'sysadmin' al LOGIN 'DBA'
+
 ALTER SERVER ROLE sysadmin ADD MEMBER DBA;
 
 
-
+--------------------------------
+-- LOGINs DE CAJEROS
+--------------------------------
 --- login y password
 --- se crean a nivel instancia, se guarda en master
 --- son credenciales de acceso
-CREATE LOGIN FranciscoLUCENA  
-	WITH PASSWORD = 'I_am_1nvisible'
+
+
+CREATE LOGIN cajero1  
+	WITH PASSWORD = 'CaracolRapido999'
 	, DEFAULT_DATABASE = COM5600G02,
-	CHECK_EXPIRATION = OFF, -- Desactiva la expiración de la contraseña, significa que nunca expirará.
-	CHECK_POLICY = OFF -- Desactiva la política de contraseñas de Windows para el login en SQL Server 
-						-- requisitos de complejidad (longitud mínima, combinación de caracteres, NO poder ser similar a la anterior, etc.).
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
 GO
 
-CREATE LOGIN EduardoLUNA  
-	WITH PASSWORD = 'NoOneWillGuessThisOne'
+CREATE LOGIN cajero2  
+	WITH PASSWORD = 'TortugaTurbo27'
 	, DEFAULT_DATABASE = COM5600G02,
-	CHECK_EXPIRATION = OFF, -- Desactiva la expiración de la contraseña, significa que nunca expirará.
-	CHECK_POLICY = OFF -- Desactiva la política de contraseñas de Windows para el login en SQL Server 
-						-- requisitos de complejidad (longitud mínima, combinación de caracteres, NO poder ser similar a la anterior, etc.).
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF
 GO
 
-CREATE LOGIN MauroLUNA 
-	WITH PASSWORD = 'PasswordNotFound'
+CREATE LOGIN cajero3 
+	WITH PASSWORD = 'CorchoLoco99'
 	, DEFAULT_DATABASE = COM5600G02,
-	CHECK_EXPIRATION = OFF, -- Desactiva la expiración de la contraseña, significa que nunca expirará.
-	CHECK_POLICY = OFF -- Desactiva la política de contraseñas de Windows para el login en SQL Server 
-						-- requisitos de complejidad (longitud mínima, combinación de caracteres, NO poder ser similar a la anterior, etc.).
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
 GO
 		
-CREATE LOGIN EmilceMAIDANA 
-	WITH PASSWORD = 'MyDogAteMyPassword'
+CREATE LOGIN cajero4 
+	WITH PASSWORD = 'chinchudo91'
 	, DEFAULT_DATABASE = COM5600G02,
-	CHECK_EXPIRATION = OFF, -- Desactiva la expiración de la contraseña, significa que nunca expirará.
-	CHECK_POLICY = OFF -- Desactiva la política de contraseñas de Windows para el login en SQL Server 
-						-- requisitos de complejidad (longitud mínima, combinación de caracteres, NO poder ser similar a la anterior, etc.).
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
 GO
 		
-CREATE LOGIN GISELAMAIDANA 
-	WITH PASSWORD = 'IAmTheChosenOne'
+CREATE LOGIN cajero5 
+	WITH PASSWORD = 'soyUnRobot?'
 	, DEFAULT_DATABASE = COM5600G02,
-	CHECK_EXPIRATION = OFF, -- Desactiva la expiración de la contraseña, significa que nunca expirará.
-	CHECK_POLICY = OFF -- Desactiva la política de contraseñas de Windows para el login en SQL Server 
-						-- requisitos de complejidad (longitud mínima, combinación de caracteres, NO poder ser similar a la anterior, etc.).
+	CHECK_EXPIRATION = OFF,
+	CHECK_POLICY = OFF 
 GO		
 
-CREATE LOGIN FernandaMAIZARES 
-	WITH PASSWORD = 'InsertCoinToContinue'
+CREATE LOGIN cajero6 
+	WITH PASSWORD = 'vacaNinja47'
 	, DEFAULT_DATABASE = COM5600G02,
-	CHECK_EXPIRATION = OFF, -- Desactiva la expiración de la contraseña, significa que nunca expirará.
-	CHECK_POLICY = OFF -- Desactiva la política de contraseñas de Windows para el login en SQL Server 
-						-- requisitos de complejidad (longitud mínima, combinación de caracteres, NO poder ser similar a la anterior, etc.).
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF
 GO
 	
+
+--------------------------------
+-- LOGINs DE SUPERVISORES
+--------------------------------
+
+
+CREATE LOGIN supervisor1  
+	WITH PASSWORD = 'I_am_1nvisible'
+	, DEFAULT_DATABASE = COM5600G02,
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
+GO
+
+CREATE LOGIN supervisor2 
+	WITH PASSWORD = 'NoOneWillGuessThisOne'
+	, DEFAULT_DATABASE = COM5600G02,
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
+GO
+
+CREATE LOGIN supervisor3
+	WITH PASSWORD = 'PasswordNotFound'
+	, DEFAULT_DATABASE = COM5600G02,
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
+GO
+		
+CREATE LOGIN supervisor4
+	WITH PASSWORD = 'MyDogAteMyPassword'
+	, DEFAULT_DATABASE = COM5600G02,
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
+GO
+		
+CREATE LOGIN supervisor5
+	WITH PASSWORD = 'IAmTheChosenOne'
+	, DEFAULT_DATABASE = COM5600G02,
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
+GO		
+
+CREATE LOGIN supervisor6
+	WITH PASSWORD = 'InsertCoinToContinue'
+	, DEFAULT_DATABASE = COM5600G02,
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
+GO
+
+
+
+--------------------------------
+-- LOGINs DE GERENTE
+--------------------------------
+
+CREATE LOGIN gerente1   
+	WITH PASSWORD = 'IAmNotARobot123'
+	, DEFAULT_DATABASE = COM5600G02,
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
+GO
+
+
+CREATE LOGIN gerente2  
+	WITH PASSWORD = 'ItsaTrap123!'
+	, DEFAULT_DATABASE = COM5600G02,
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
+GO
+
+
+CREATE LOGIN gerente3   
+	WITH PASSWORD = 'NoMorePasswords!'
+	, DEFAULT_DATABASE = COM5600G02,
+	CHECK_EXPIRATION = OFF, 
+	CHECK_POLICY = OFF 
+GO
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------
+-- CREACION DE USERs
+--------------------------------------------------------------------------------------------------------
+
+-- Crear el USUARIO 'DBA' en la base de datos actual
 
 use COM5600G02;
 go
 
--- Crear el USUARIO 'DBA' en la base de datos actual
 CREATE USER DBA FOR LOGIN DBA;
-
+go
+--------------------------------
+-- USERs DE CAJEROS
+--------------------------------
 
 --- usuario se crea nivel db, da el acceso solo a esa db
 --- dentro de la carpeta security estan user, roles y schemas
-CREATE USER FranciscoLUCENA -- drop user supervisor
-FOR LOGIN FranciscoLUCENA
+CREATE USER cajero1 
+FOR LOGIN cajero1
 WITH DEFAULT_SCHEMA = ventas 
 go
 --- si no le doy un schema default, le asigna dbo
 --- si hubiera 2 tablas del mismo nombre en ambos schemas y no especifico el schema al que quiero acceder, 
 --- cuando intente acceder a una tabla por medio de un select, va a acceder al de dbo
 
-CREATE USER EduardoLUNA -- drop user supervisor
-FOR LOGIN EduardoLUNA
+CREATE USER cajero2 
+FOR LOGIN cajero2
 WITH DEFAULT_SCHEMA = ventas 
 go
 
 
-CREATE USER MauroLUNA -- drop user supervisor
-FOR LOGIN MauroLUNA
+CREATE USER cajero3
+FOR LOGIN cajero3
 WITH DEFAULT_SCHEMA = ventas 
 go
 
 
-CREATE USER EmilceMAIDANA -- drop user supervisor
-FOR LOGIN EmilceMAIDANA
+CREATE USER cajero4 
+FOR LOGIN cajero4
 WITH DEFAULT_SCHEMA = ventas 
 go
 
 
-CREATE USER GISELAMAIDANA -- drop user supervisor
-FOR LOGIN GISELAMAIDANA
+CREATE USER cajero5
+FOR LOGIN cajero5
+WITH DEFAULT_SCHEMA = ventas 
+go
+
+CREATE USER cajero6
+FOR LOGIN cajero6
 WITH DEFAULT_SCHEMA = ventas 
 go
 
 
-CREATE USER FernandaMAIZARES -- drop user supervisor
-FOR LOGIN FernandaMAIZARES
+
+--------------------------------
+-- USERs DE SUPERVISORES
+--------------------------------
+
+CREATE USER supervisor1 
+FOR LOGIN supervisor1 
 WITH DEFAULT_SCHEMA = ventas 
 go
 
 
---- los roles de base de datos se asignan a usuarios
--- Crear el rol 'supervisor' en la base de datos y asignar la propiedad al usuario 'DBA' (usuario de la db del tp)
+CREATE USER supervisor2 
+FOR LOGIN supervisor2
+WITH DEFAULT_SCHEMA = ventas 
+go
+
+
+CREATE USER supervisor3 
+FOR LOGIN supervisor3
+WITH DEFAULT_SCHEMA = ventas 
+go
+
+
+CREATE USER supervisor4 
+FOR LOGIN supervisor4
+WITH DEFAULT_SCHEMA = ventas 
+go
+
+
+CREATE USER supervisor5 
+FOR LOGIN supervisor5
+WITH DEFAULT_SCHEMA = ventas 
+go
+
+
+CREATE USER supervisor6 
+FOR LOGIN supervisor6
+WITH DEFAULT_SCHEMA = ventas 
+go
+
+
+
+--------------------------------
+-- USERs DE GERENTE
+--------------------------------
+
+CREATE USER gerente1 
+FOR LOGIN gerente1
+WITH DEFAULT_SCHEMA = ventas 
+go
+
+CREATE USER gerente2
+FOR LOGIN gerente2
+WITH DEFAULT_SCHEMA = ventas 
+go
+
+CREATE USER gerente3 
+FOR LOGIN gerente3
+WITH DEFAULT_SCHEMA = ventas 
+go
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------
+-- CREACION DE ROLES Y OTORGAMIENTO DE PERMISOS
+--------------------------------------------------------------------------------------------------------
+
+CREATE ROLE cajero AUTHORIZATION DBA;
+go
+
+
+GRANT EXECUTE ON ventas.vista_de_registros_de_ventas TO cajero;
+go
+--SELECT * FROM ventas.vista_de_registros_de_ventas;
+
+GRANT EXECUTE ON ventas.generar_venta_con_factura TO cajero;
+go
+
+---poner prueba aqui o en otro scritp de testing
+
+
+
+
 
 CREATE ROLE supervisor AUTHORIZATION DBA;
 go
--- tiene el permiso para realizar ciertas tareas administrativas en ese rol, como:
 
--- Añadir o quitar miembros del rol.
--- Cambiar los permisos asignados al rol.
--- Cambiar la propiedad del rol.
 
-	
-
-GRANT SELECT ON ventas.vista_factura_detalle TO supervisor;
+GRANT SELECT ON ventas.vista_de_registros_de_ventas TO supervisor;
 go
 
-SELECT * FROM ventas.vista_factura_detalle;
-go
+-- select * from ventas.notasDeCredito
 
+-- select * from catalogo.producto
+
+--EXEC ventas.insertarNotaDeCredito @idFactura = 1, @idProducto = 5495, @razon = 'devProd';--- 'devPago', 'devProd'
+--go
 
 
 GRANT EXECUTE ON ventas.insertarNotaDeCredito TO supervisor;
 go
 
-GRANT SELECT ON ventas.notasDeCredito TO supervisor;
-go
-
-select * from ventas.notasDeCredito
-go
-select * from catalogo.producto
-go
-
-EXEC ventas.insertarNotaDeCredito
-    @idFactura = 1,
-    @idProducto = 5495,
-    @razon = 'devProd';--- 'devPago', 'devProd'
+GRANT SELECT ON ventas.vista_de_notas_de_credito TO supervisor;
 go
 
 
 
-ALTER TABLE supermercado.empleado
-ADD usuario VARCHAR(50);
-GO
-
-
-CREATE OR ALTER PROCEDURE supermercado.sp_insertarUsuario
-    @legajo INT,
-    @usuario VARCHAR(50)
-AS
-BEGIN
-    -- Verificar si el empleado existe
-    IF NOT EXISTS (SELECT 1 FROM supermercado.empleado WHERE legajo = @legajo AND activo = 1)
-    BEGIN
-        PRINT 'Empleado no encontrado o inactivo';
-        RETURN;
-    END
-
-    -- Insertar el nombre de usuario en el campo 'usuario'
-    UPDATE supermercado.empleado
-    SET usuario = @usuario
-    WHERE legajo = @legajo;
-
-    PRINT 'Nombre de usuario insertado exitosamente';
-END;
-GO
-
-
-/*
-sp_addrolemember es un procedimiento almacenado en SQL Server que se usa para agregar 
-un usuario o grupo de usuarios a un rol específico dentro de la base de datos. 
-Cuando se ejecuta, concede permisos y privilegios a un usuario basados en el rol especificado. 
-Esto es especialmente útil para asignar permisos de seguridad 
-sin tener que configurarlos manualmente para cada usuario.
-
-Ejemplo de uso de sp_addrolemember:
-
-EXEC sp_addrolemember 'nombre_rol', 'nombre_usuario';
-'nombre_rol': Es el rol al cual se desea agregar el usuario (por ejemplo, cajero, supervisor, db_datareader, etc.).
-'nombre_usuario': Es el nombre del usuario que se quiere añadir a ese rol.
-*/
-
-
-CREATE OR ALTER PROCEDURE supermercado.sp_asignarRol
-    @legajo INT,
-    @usuario VARCHAR(50)
-AS
-BEGIN
-    -- Verificar si el empleado existe
-    IF NOT EXISTS (SELECT 1 FROM supermercado.empleado WHERE legajo = @legajo AND activo = 1)
-    BEGIN
-        PRINT 'Empleado no encontrado o inactivo';
-        RETURN;
-    END
-
-    -- Variable para almacenar el cargo del empleado
-    DECLARE @cargo VARCHAR(20);
-
-    -- Obtener el cargo del empleado
-    SELECT @cargo = cargo
-    FROM supermercado.empleado
-    WHERE legajo = @legajo;
-
-    -- Verificar y asignar el rol según el cargo
-    IF @cargo = 'Cajero'
-    BEGIN
-        -- Asignar rol 'cajero' al usuario
-        EXEC sp_addrolemember 'cajero', @usuario;
-        PRINT 'Rol cajero asignado';
-    END
-    ELSE IF @cargo = 'Supervisor'
-    BEGIN
-        -- Asignar rol 'supervisor' al usuario
-        EXEC sp_addrolemember 'supervisor', @usuario;
-        PRINT 'Rol supervisor asignado';
-    END
-    ELSE IF @cargo = 'Gerente de sucursal'
-    BEGIN
-        -- Asignar rol 'gerente' al usuario
-        EXEC sp_addrolemember 'gerente', @usuario;
-        PRINT 'Rol gerente asignado';
-    END
-    ELSE
-    BEGIN
-        PRINT 'Cargo no válido para asignación de rol';
-        RETURN;
-    END
-
-    -- Actualizar el campo 'usuario' en la tabla 'empleado' con el nombre de usuario
-    UPDATE supermercado.empleado
-    SET usuario = @usuario
-    WHERE legajo = @legajo;
-
-    PRINT 'Usuario asignado exitosamente';
-END;
-GO
-
-
-
-/*
-ALTER ROLE supervisor ADD MEMBER FranciscoLUCENA;
-go
-ALTER ROLE supervisor ADD MEMBER EduardoLUNA;
-go
-ALTER ROLE supervisor ADD MEMBER MauroLUNA;
-go
-ALTER ROLE supervisor ADD MEMBER EmilceMAIDANA;
-go
-ALTER ROLE supervisor ADD MEMBER GISELAMAIDANA;
-go
-ALTER ROLE supervisor ADD MEMBER FernandaMAIZARES;
-go
-*/
 
 
 
 
-
-
-
-USE master;
-GO
-
- 
-CREATE LOGIN OscarORTIZ  
-	WITH PASSWORD = 'IAmNotARobot123'
-	, DEFAULT_DATABASE = COM5600G02,
-	CHECK_EXPIRATION = OFF, -- Desactiva la expiración de la contraseña, significa que nunca expirará.
-	CHECK_POLICY = OFF -- Desactiva la política de contraseñas de Windows para el login en SQL Server 
-						-- requisitos de complejidad (longitud mínima, combinación de caracteres, NO poder ser similar a la anterior, etc.).
-GO
-
-
-CREATE LOGIN DeboraPACHTMAN  
-	WITH PASSWORD = 'ItsaTrap123!'
-	, DEFAULT_DATABASE = COM5600G02,
-	CHECK_EXPIRATION = OFF, -- Desactiva la expiración de la contraseña, significa que nunca expirará.
-	CHECK_POLICY = OFF -- Desactiva la política de contraseñas de Windows para el login en SQL Server 
-						-- requisitos de complejidad (longitud mínima, combinación de caracteres, NO poder ser similar a la anterior, etc.).
-GO
-
-
-CREATE LOGIN RominaPADILLA  
-	WITH PASSWORD = 'NoMorePasswords!'
-	, DEFAULT_DATABASE = COM5600G02,
-	CHECK_EXPIRATION = OFF, -- Desactiva la expiración de la contraseña, significa que nunca expirará.
-	CHECK_POLICY = OFF -- Desactiva la política de contraseñas de Windows para el login en SQL Server 
-						-- requisitos de complejidad (longitud mínima, combinación de caracteres, NO poder ser similar a la anterior, etc.).
-GO
-
-
-use COM5600G02;
-go
---- usuario se crea nivel db, da el acceso solo a esa db
---- dentro de la carpeta security estan user, roles y schemas
-CREATE USER OscarORTIZ -- drop user supervisor
-FOR LOGIN OscarORTIZ
-WITH DEFAULT_SCHEMA = ventas 
-go
-
-CREATE USER DeboraPACHTMAN -- drop user supervisor
-FOR LOGIN DeboraPACHTMAN
-WITH DEFAULT_SCHEMA = ventas 
-go
-
-CREATE USER RominaPADILLA  -- drop user supervisor
-FOR LOGIN RominaPADILLA 
-WITH DEFAULT_SCHEMA = ventas 
-go
 
 
 CREATE ROLE gerente AUTHORIZATION DBA;
 go
--- tiene el permiso para realizar ciertas tareas administrativas en ese rol, como:
-
--- Añadir o quitar miembros del rol.
--- Cambiar los permisos asignados al rol.
--- Cambiar la propiedad del rol.
-
-
 
 
 -- select * from ventas.factura
@@ -432,12 +419,108 @@ SELECT * FROM ventas.reporte_de_ventas
 go
 
 
-
-
-ALTER ROLE gerente ADD MEMBER OscarORTIZ;
-go
-ALTER ROLE gerente ADD MEMBER DeboraPACHTMAN;
-go
-ALTER ROLE gerente ADD MEMBER RominaPADILLA;
+GRANT SELECT ON ventas.vista_de_notas_de_credito TO gerente;
 go
 
+
+
+GRANT SELECT ON ventas.vista_de_registros_de_ventas TO gerente;
+go
+
+
+
+
+
+
+
+
+
+ALTER TABLE supermercado.empleado
+ADD usuario VARCHAR(50);
+GO
+
+
+exec supermercado.insertarUsuario 257020, cajero1
+go
+exec supermercado.insertarUsuario 257021, cajero2
+go
+exec supermercado.insertarUsuario 257022, cajero3
+go
+exec supermercado.insertarUsuario 257023, cajero4
+go
+exec supermercado.insertarUsuario 257024, cajero5
+go
+exec supermercado.insertarUsuario 257025, cajero6
+go
+exec supermercado.insertarUsuario 257026, supervisor1
+go
+exec supermercado.insertarUsuario 257027, supervisor2
+go
+exec supermercado.insertarUsuario 257028, supervisor3
+go
+exec supermercado.insertarUsuario 257029, supervisor4
+go
+exec supermercado.insertarUsuario 257030, supervisor5
+go
+exec supermercado.insertarUsuario 257031, supervisor6
+go
+exec supermercado.insertarUsuario 257032, gerente1
+go
+exec supermercado.insertarUsuario 257033, gerente2
+go
+exec supermercado.insertarUsuario 257034, gerente3
+go
+
+--select * from supermercado.empleado
+
+
+
+exec supermercado.asignarRol 257020
+go
+exec supermercado.asignarRol 257021
+go
+exec supermercado.asignarRol 257022
+go
+exec supermercado.asignarRol 257023
+go
+exec supermercado.asignarRol 257024
+go
+exec supermercado.asignarRol 257025
+go
+exec supermercado.asignarRol 257026
+go
+exec supermercado.asignarRol 257027
+go
+exec supermercado.asignarRol 257028
+go
+exec supermercado.asignarRol 257029
+go
+exec supermercado.asignarRol 257030
+go
+exec supermercado.asignarRol 257031
+go
+exec supermercado.asignarRol 257032
+go
+exec supermercado.asignarRol 257033
+go
+exec supermercado.asignarRol 257034
+go
+
+
+
+
+
+/*
+ALTER ROLE supervisor ADD MEMBER FranciscoLUCENA;
+go
+ALTER ROLE supervisor ADD MEMBER EduardoLUNA;
+go
+ALTER ROLE supervisor ADD MEMBER MauroLUNA;
+go
+ALTER ROLE supervisor ADD MEMBER EmilceMAIDANA;
+go
+ALTER ROLE supervisor ADD MEMBER GISELAMAIDANA;
+go
+ALTER ROLE supervisor ADD MEMBER FernandaMAIZARES;
+go
+*/

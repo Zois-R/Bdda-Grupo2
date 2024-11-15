@@ -194,8 +194,6 @@ go
 
 
 
-
-
 CREATE TABLE ventas.notasDeCredito 
 	(
 		id				INT IDENTITY(1,1),
