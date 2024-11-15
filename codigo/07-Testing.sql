@@ -400,15 +400,95 @@ select * from supermercado.empleado;
 --------------mostrar los empleados desencriptados 
 EXEC supermercado.mostrarEmpleadosDesencriptados 
     @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.';
+go
 
-	
---------------demostrar que solo el supervisor puede hacer las notas de credito  (FALTA HACER )
+
+
+
+
+
+
+
+---------------------------------logins , usuarios y roles 
+
 use COM5600G02;
 use master
+--------------demostrar que solo el supervisor puede hacer las notas de credito  (FALTA HACER )
+go
+
+--------primero ejecutamos con cajero
+EXECUTE AS LOGIN = 'cajero1';						
+SELECT CURRENT_USER;
 
 
+----ver lo productos que tengo
+select * from catalogo.vista_Producto_Resumen;
+
+DECLARE @productosDetalle ventas.TipoProductosDetalle;
+INSERT INTO @productosDetalle (idProducto, cantidad)
+VALUES (6520, 5)   
+
+-- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
+EXEC ventas.generar_venta_con_factura
+    @nroFactura = '750-67-2026',    -- Número de factura de ejemplo
+    @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
+    @fecha = '14/11/2024',          -- Fecha de la venta
+    @hora = '13:08:00',             -- Hora de la venta
+    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
+    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
+    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
+    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
+    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
+    @genero = 'Male',          -- Género del cliente
+    @cuil = '20-12345678-7',        -- CUIL del cliente (dato ficticio)
+    @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
+go
+
+select * from ventas.vista_de_registros_de_ventas where ID_Factura = '750-67-2026';
+
+REVERT;		
+
+
+-----------luego lo probamos con un supervisor 
+EXECUTE AS LOGIN = 'supervisor1';						
+SELECT CURRENT_USER;
+
+DECLARE @productosDetalle ventas.TipoProductosDetalle;
+INSERT INTO @productosDetalle (idProducto, cantidad)
+VALUES (6528, 1)   
+
+-- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
+EXEC ventas.generar_venta_con_factura
+    @nroFactura = '750-67-8426',    -- Número de factura de ejemplo
+    @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
+    @fecha = '14/11/2024',          -- Fecha de la venta
+    @hora = '13:08:00',             -- Hora de la venta
+    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
+    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
+    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
+    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
+    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
+    @genero = 'Male',          -- Género del cliente
+    @cuil = '20-12345678-7',        -- CUIL del cliente (dato ficticio)
+    @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
+go
+
+select * from ventas.vista_de_registros_de_ventas where ID_Factura = '750-67-8426';
+
+REVERT;		
+
+
+
+
+
+
+
+
+--------------demostrar que solo el supervisor puede hacer las notas de credito 
 
 select * from ventas.detalleVenta order by idFactura desc;	--mostrar los
+
+
 -----este es un supervisor
 EXECUTE AS LOGIN = 'supervisor1';						--este es un supervisor
 SELECT CURRENT_USER;										-- Muestra el actual login
@@ -420,6 +500,11 @@ EXECUTE AS LOGIN = 'gerente1';
 SELECT CURRENT_USER;				-- Muestra el actual login
 exec ventas.insertarNotaDeCredito 999,1625,'devProd';	
 REVERT;			
+
+
+
+
+
 
 
 --------------demostrar que solo el gerente puede hacer los reportes 
@@ -435,6 +520,14 @@ EXECUTE AS LOGIN = 'supervisor1';
 SELECT CURRENT_USER;				-- Muestra el actual login
 exec ventas.reporte_productos_menos_vendidos_mes 1, 2019;
 REVERT;		
+
+
+
+
+
+
+
+
 
 
 
@@ -466,4 +559,11 @@ JOIN sys.objects AS obj
 
 
 -----------la prueba de back-up esta en otro archivo
+
+
+declare @mostrar VARBINARY(256);
+
+set @mostrar = CONVERT(VARCHAR(256), 'el texto prohibido');
+
+print @mostrar
 

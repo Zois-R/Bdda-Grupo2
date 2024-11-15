@@ -275,6 +275,12 @@ go
 CREATE ROLE cajero AUTHORIZATION DBA;
 go
 
+---dar acesso a la tabla tipoProductosDetalle al cajero
+GRANT EXECUTE ON TYPE::ventas.TipoProductosDetalle TO cajero;
+GO
+
+GRANT SELECT ON catalogo.vista_Producto_Resumen  TO cajero;
+go
 
 GRANT SELECT ON ventas.vista_de_registros_de_ventas TO cajero;
 go

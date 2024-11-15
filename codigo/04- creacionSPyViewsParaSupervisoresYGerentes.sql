@@ -3,6 +3,18 @@ go
 
 
 
+CREATE or ALTER VIEW catalogo.vista_Producto_Resumen AS
+SELECT 
+    id,
+    nombre,
+    Precio
+FROM 
+    catalogo.producto;
+GO
+
+
+
+
 CREATE or ALTER VIEW ventas.vista_de_registros_de_ventas AS
 SELECT  
     f.nroFactura as ID_Factura, 
@@ -617,43 +629,6 @@ BEGIN
 END;
 GO
 
-
---- este sp solo descifra con la frase clave correcta
-
-CREATE OR ALTER PROCEDURE supermercado.DescifrarTablaEmpleado
-    @FraseClave NVARCHAR(128)
-AS
-BEGIN
-    -- Actualizar cada fila descifrando las columnas especificadas
-    UPDATE supermercado.empleado
-    SET 
-        nombre = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, nombre)),
-        apellido = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, apellido)),
-        dni = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, dni)),
-        direccion = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, direccion)),
-        email_personal = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, email_personal)),
-        email_empresa = CONVERT(VARBINARY(256), DecryptByPassPhrase(@FraseClave, email_empresa));
-END;
-GO
-
-
---- este sp cifra pero suponiendo que anteriormente fue descifrada
-
-CREATE OR ALTER PROCEDURE supermercado.CifrarTablaEmpleado
-    @FraseClave NVARCHAR(128)
-AS
-BEGIN
-    -- Actualizar cada fila cifrando las columnas especificadas directamente
-    UPDATE supermercado.empleado
-    SET 
-        nombre = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), nombre)),
-        apellido = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), apellido)),
-        dni = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), dni)),
-        direccion = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), direccion)),
-        email_personal = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), email_personal)),
-        email_empresa = EncryptByPassPhrase(@FraseClave, CONVERT(NVARCHAR(256), email_empresa));
-END;
-GO
 
 
 
