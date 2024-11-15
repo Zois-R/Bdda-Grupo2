@@ -327,29 +327,29 @@ go
 
 GRANT EXECUTE ON ventas.TotalFacturadoPorDiaSemana TO gerente;
 go
-
+/*
 EXEC ventas.TotalFacturadoPorDiaSemana @mes = 1, @anio = 2019;
 go
-
+*/
 
 
 
 GRANT EXECUTE ON ventas.reporte_trimestral_facturacion TO gerente;
 go
- 
+ /*
 EXEC ventas.reporte_trimestral_facturacion @Trimestre = 1, @Anio = 2019;
 go
 
-
+*/
 
 
 
 GRANT EXECUTE ON ventas.reporte_producto_vendido_rango_fecha TO gerente;
 go
-
+/*
 EXEC ventas.reporte_producto_vendido_rango_fecha @FechaIni = '2019-02-15', @FechaFinal = '2019-02-20';
 go
-
+*/
 
 
 
@@ -357,10 +357,10 @@ go
 
 GRANT EXECUTE ON ventas.reporte_producto_vendido_rango_fecha_sucursal TO gerente;
 go
-
+/*
 EXEC ventas.reporte_producto_vendido_rango_fecha_sucursal @FechaIni = '2019-02-15', @FechaFinal = '2019-02-20';
 go
-
+*/
 
 
 
@@ -369,30 +369,30 @@ go
 
 GRANT EXECUTE ON ventas.reporte_productos_mas_vendidos_por_semana TO gerente;
 go
-
+/*
 exec ventas.reporte_productos_mas_vendidos_por_semana 1, 2019;
 go
-
+*/
 
 
 
 GRANT EXECUTE ON ventas.reporte_productos_menos_vendidos_mes TO gerente;
 go
-
+/*
 exec ventas.reporte_productos_menos_vendidos_mes 1, 2019;
 go
 
-
+*/
 
 
 
 
 GRANT EXECUTE ON ventas.reporte_total_acumulado_ventas TO gerente;
 go
-
+/*
 exec ventas.reporte_total_acumulado_ventas '2019-02-15', 2;
 go
-
+*/
 
 
 
@@ -400,7 +400,7 @@ go
 
 GRANT EXECUTE ON supermercado.mostrarEmpleadosDesencriptados TO gerente;
 go
-
+/*
 EXEC supermercado.mostrarEmpleadosDesencriptados 
     @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.', 
     @idSucursalGerente = 1, 
@@ -408,16 +408,16 @@ EXEC supermercado.mostrarEmpleadosDesencriptados
 go
 
 
-
+*/
 
 
 
 GRANT SELECT ON ventas.reporte_de_ventas TO gerente;
 go
-	
+	/*
 SELECT * FROM ventas.reporte_de_ventas
 go
-
+*/
 
 GRANT SELECT ON ventas.vista_de_notas_de_credito TO gerente;
 go

@@ -213,24 +213,6 @@ BEGIN
 END;
 GO
 
-EXEC supermercado.insertarEmpleado
-    @legajo = 257230,                     -- Legajo que ya existe en la base de datos
-    @nombre = N'Juan',                   -- Nombre del empleado
-    @apellido = N'Perez',                -- Apellido del empleado
-    @dni = N'909457464',                  -- DNI del empleado
-    @direccion = N'Calle Falsa 123',    -- Dirección del empleado
-    @email_personal = N'kuanperez@gmail.com',  -- Correo personal
-    @email_empresa = N'kuan.perez@superA.com', -- Correo de empresa
-    @cargo = 'Cajero',                   -- Cargo del empleado
-    @idSucursal = 2,                     -- ID de la sucursal a la que pertenece el empleado
-    @turno = 'TM',                   -- Turno del empleado
-    @FraseClave = N'FraseSecreta123';    -- Frase clave para cifrado
-
-	select * from supermercado.empleado
-
-
-
-
 go
 CREATE OR ALTER PROCEDURE catalogo.insertarProducto
     @nombre NVARCHAR(200),
