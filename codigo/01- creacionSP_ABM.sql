@@ -367,25 +367,21 @@ BEGIN
     DECLARE @idFactura INT;
     DECLARE @total DECIMAL(10, 2) = 0.0;
     DECLARE @totalConIVA DECIMAL(10, 2) = 0.0;
-    DECLARE @IVA DECIMAL(4, 2) = 1.21;  -- Tasa de IVA (21%) directamente como 1.21
+    DECLARE @IVA DECIMAL(4, 2) = 1.21;  -- Tasa de IVA (21%)
     DECLARE @idCliente INT;
     DECLARE @clienteExistente BIT;
+    DECLARE @idProducto INT;
+    DECLARE @precio DECIMAL(6, 2);
+    DECLARE @cantidad SMALLINT;
+    DECLARE @subtotal DECIMAL(10, 2);
+    DECLARE @subtotalConIVA DECIMAL(10, 2);
 
-	--Validar el nro de factura no exista en la tabla factura, si existe hago un return sino ejecuta
-	IF NOT EXISTS (SELECT 1 FROM @productosDetalle)
+    -- Validar si el número de factura ya existe
+    IF EXISTS (SELECT 1 FROM ventas.factura WHERE nroFactura = @nroFactura)
     BEGIN
-		print('no hay producto asociado')
+        PRINT('YA EXISTE LA FACTURA');
         RETURN;
     END
-
-
-	IF EXISTS (SELECT 1 FROM ventas.factura WHERE nroFactura = @nroFactura)
-    BEGIN
-		print('YA EXISTE LA FACTURA')
-        RETURN;
-    END
-
-
 
     -- 1. Insertar la factura sin total ni totalConIVA (aún por calcular)
     INSERT INTO ventas.factura (nroFactura, tipo_Factura, fecha, hora, idMedio_de_pago, idPago, estadoDePago)
@@ -403,18 +399,25 @@ BEGIN
         @clienteExistente = @clienteExistente OUTPUT;
 
     -- 3. Insertar detalles de venta para cada producto y calcular subtotales
-    DECLARE @idProducto INT, @precio DECIMAL(6, 2), @cantidad SMALLINT;
-    DECLARE @subtotal DECIMAL(10, 2), @subtotalConIVA DECIMAL(10, 2);
-
     DECLARE product_cursor CURSOR FOR 
-    SELECT idProducto, precio, cantidad
+    SELECT idProducto, cantidad
     FROM @productosDetalle;
 
     OPEN product_cursor;
-    FETCH NEXT FROM product_cursor INTO @idProducto, @precio, @cantidad;
+    FETCH NEXT FROM product_cursor INTO @idProducto, @cantidad;
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
+        -- Verificar si el producto existe
+        IF NOT EXISTS (SELECT 1 FROM catalogo.producto WHERE id = @idProducto)
+        BEGIN
+            PRINT('Producto con id ' + CAST(@idProducto AS VARCHAR) + ' no existe');
+            RETURN;
+        END
+
+        -- Obtener el precio del producto
+        SELECT @precio = Precio FROM catalogo.producto WHERE id = @idProducto;
+
         -- Calcular el subtotal y el subtotal con IVA para cada producto
         SET @subtotal = @precio * @cantidad;
         SET @subtotalConIVA = @subtotal * @IVA;
@@ -427,7 +430,7 @@ BEGIN
         SET @total = @total + @subtotal;
         SET @totalConIVA = @totalConIVA + @subtotalConIVA;
 
-        FETCH NEXT FROM product_cursor INTO @idProducto, @precio, @cantidad;
+        FETCH NEXT FROM product_cursor INTO @idProducto, @cantidad;
     END;
 
     CLOSE product_cursor;

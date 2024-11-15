@@ -210,11 +210,11 @@ select * from ventas.detalleVenta
 DECLARE @productosDetalle ventas.TipoProductosDetalle;
 
 -- Insertamos productos de prueba en la tabla de tipo
-INSERT INTO @productosDetalle (idProducto, idLineaProducto, precio, cantidad)
+INSERT INTO @productosDetalle (idProducto, cantidad)
 VALUES
-    (1, 101, 100.00, 5555),  -- Producto 1, Línea 101, Precio 100.00, Cantidad 2
-    (2, 102, 50.00, 5555),   -- Producto 2, Línea 102, Precio 50.00, Cantidad 3
-    (3, 103, 30.00, 3444);   -- Producto 3, Línea 103, Precio 30.00, Cantidad 5
+    (1,1),  -- Producto 1,  Cantidad 2
+    (2,2),   -- Producto 2, Cantidad 3
+    (3,2);   -- Producto 3, Cantidad 5
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
@@ -237,15 +237,15 @@ go
 DECLARE @productosDetalle ventas.TipoProductosDetalle;
 
 -- Insertamos productos de prueba en la tabla de tipo
-INSERT INTO @productosDetalle (idProducto, idLineaProducto, precio, cantidad)
+INSERT INTO @productosDetalle (idProducto, cantidad)
 VALUES
-    (1, 101, 100.00, 5555),  -- Producto 1, Línea 101, Precio 100.00, Cantidad 2
-    (2, 102, 50.00, 5555),   -- Producto 2, Línea 102, Precio 50.00, Cantidad 3
-    (3, 103, 30.00, 3444);   -- Producto 3, Línea 103, Precio 30.00, Cantidad 5
+    (1,1),  -- Producto 1,  Cantidad 2
+    (2,2),   -- Producto 2, Cantidad 3
+    (3,2);   -- Producto 3, Cantidad 5
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
-    @nroFactura = '751-67-8428',    -- Número de factura de ejemplo
+    @nroFactura = '645-67-8528',    -- Número de factura de ejemplo
     @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
     @fecha = '1/5/2019',          -- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
@@ -258,7 +258,7 @@ EXEC ventas.generar_venta_con_factura
     @cuil = '20-12345678-9',        -- CUIL del cliente (dato ficticio)
     @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
 go
-
+select * from ventas.vista_de_registros_de_ventas where ID_Factura = '645-67-8528';
 ---------------------generar nuevas ventas 
 -- probar que no pueda subir factura sin producto
 DECLARE @productosDetalle ventas.TipoProductosDetalle;
@@ -281,7 +281,7 @@ go
 
 select * from ventas.vista_de_registros_de_ventas where ID_Factura='456-67-8428';
 select * from ventas.factura where nroFactura = '456-67-8428'
-
+select * from ventas.vista_de_registros_de_ventas;
 
 
 
@@ -332,10 +332,11 @@ select * from catalogo.producto order by id desc;
 GO
 EXEC ventas.importarVentas_registradas 'C:\importar\nuevosDatos\Ventas_registradas_2.csv';
 go
+
 select * from ventas.factura order by id desc;
 select * from ventas.detalleVenta order by id desc;
 select * from catalogo.producto order by id desc;
-
+select * from ventas.vista_de_registros_de_ventas;
 
 ---------------------------------------------------------------------
 --TEST REPORTES  , entrega 4
@@ -369,12 +370,12 @@ select * from catalogo.producto order by id desc;   ---!!!!!OJO PRIMERO VER EL P
 
 -- Insertamos productos de prueba en la tabla de tipo
 DECLARE @productosDetalle ventas.TipoProductosDetalle;
-INSERT INTO @productosDetalle (idProducto, idLineaProducto, precio, cantidad)
-VALUES (6529, 150, 600.00, 2)   
+INSERT INTO @productosDetalle (idProducto, cantidad)
+VALUES (6529, 2)   
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
-    @nroFactura = '750-67-8424',    -- Número de factura de ejemplo
+    @nroFactura = '750-67-8425',    -- Número de factura de ejemplo
     @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
     @fecha = '14/11/2024',          -- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
