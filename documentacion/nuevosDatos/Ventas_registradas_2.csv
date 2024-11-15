@@ -1,0 +1,3 @@
+ID Factura;Tipo de Factura;Ciudad;Tipo de cliente;Genero;Producto;Precio Unitario;Cantidad;Fecha;hora;Medio de Pago;Empleado;Identificador de pago
+123-20-8464;B;Mandalay;Normal;Male;Play Station 5;600.00;1;3/2/2020;17:16;Ewallet;257020;'0000003100065051936777
+123-20-6534;A;Mandalay;Normal;Male;XBOX SERIES X 1TB;600.00;1;3/2/2020;17:16;Ewallet;257020;'0000003100065051936777
