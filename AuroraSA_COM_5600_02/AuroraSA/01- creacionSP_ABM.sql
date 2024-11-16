@@ -1,3 +1,16 @@
+/*
+Base de datos aplicada
+Grupo 2
+Integrantes:
+	Edilberto Guzman
+	Zois Andres Uziel Ruggiero Bellon
+	Karen Anabella Bursa
+	Jonathan Ivan Aranda Robles
+
+Nro de entrega: 3
+Fecha de entraga: 15/11/2024
+*/
+
 USE COM5600G02 
 GO
 
@@ -22,34 +35,39 @@ GO
 
 
 CREATE OR ALTER PROCEDURE supermercado.insertarComercio
-    @cuit NVARCHAR(20),
-    @nombre_comercio NVARCHAR(30),
-    @razon_social NVARCHAR(30),
-    @email NVARCHAR(100)
+    @cuit VARCHAR(20),
+    @nombre_comercio VARCHAR(30),
+    @razon_social VARCHAR(30),
+    @email VARCHAR(100)
 AS
 BEGIN
     -- Verificar que ninguno de los campos sea NULL
     IF @cuit IS NULL OR @nombre_comercio IS NULL OR @razon_social IS NULL OR @email IS NULL
     BEGIN
-        PRINT 'Error: Ningún campo puede ser NULL. Todos los parámetros son obligatorios.';
+        RAISERROR('Error: Ningún campo puede ser NULL. Todos los parámetros son obligatorios.', 16, 1);
+        RETURN;
     END
-    ELSE
+
+    -- Verificar si ya existe un comercio con el mismo CUIT
+    IF EXISTS (SELECT 1 FROM supermercado.Comercio WHERE cuit = @cuit)
     BEGIN
-        -- Verificar si ya existe un comercio con el mismo CUIT
-        IF EXISTS (SELECT 1 FROM supermercado.Comercio WHERE cuit = @cuit)
-        BEGIN
-            PRINT 'El CUIT ya está registrado en la base de datos.';
-        END
-        ELSE
-        BEGIN
-            -- Si no existe, insertar el nuevo comercio
-            INSERT INTO supermercado.Comercio (cuit, nombre_comercio, razon_social, email)
-            VALUES (@cuit, @nombre_comercio, @razon_social, @email);
-            
-            -- Registrar mensaje de inserción
-            PRINT 'Comercio insertado correctamente.';
-        END
+        RAISERROR('El CUIT ya está registrado en la base de datos.', 16, 1);
+        RETURN;
     END
+
+    -- Si no existe, insertar el nuevo comercio
+    BEGIN TRY
+        INSERT INTO supermercado.Comercio (cuit, nombre_comercio, razon_social, email)
+        VALUES (@cuit, @nombre_comercio, @razon_social, @email);
+        
+        -- Registrar mensaje de inserción
+        PRINT 'Comercio insertado correctamente.';
+    END TRY
+    BEGIN CATCH
+        -- Si ocurre un error, devolver mensaje y detener la ejecución
+        print 'se ingresaron mal los datos';
+        RETURN;
+    END CATCH
 END;
 GO
 
@@ -101,9 +119,15 @@ BEGIN
     END
     ELSE
     BEGIN
+		BEGIN TRY
         -- Si no existen duplicados, proceder a insertar la sucursal
-        INSERT INTO supermercado.sucursal (idComercio, ciudad, localidad, direccion, horario, telefono)
-        VALUES (@idComercio, @ciudad, @localidad, @direccion, @horario, @telefono);
+			INSERT INTO supermercado.sucursal (idComercio, ciudad, localidad, direccion, horario, telefono)
+				VALUES (@idComercio, @ciudad, @localidad, @direccion, @horario, @telefono);
+		END TRY
+		BEGIN CATCH
+			print 'se ingresaron mal los datos';
+			RETURN;
+		END CATCH
 
         -- Registro de inserción
         DECLARE @mensajeInsercion VARCHAR(1000);
@@ -115,17 +139,20 @@ END;
 GO
 
 
+
+
+
 CREATE OR ALTER PROCEDURE supermercado.insertarEmpleado
     @legajo INT,
-    @nombre VARCHAR(256),
-    @apellido VARCHAR(256),
-    @dni VARCHAR(256),
-    @direccion VARCHAR(256),
-    @email_personal VARCHAR(256),
-    @email_empresa VARCHAR(256),
-    @cargo VARCHAR(20),
+    @nombre VARCHAR(40),
+    @apellido VARCHAR(40),
+    @dni VARCHAR(10),
+    @direccion VARCHAR(140),
+    @email_personal VARCHAR(100),
+    @email_empresa VARCHAR(100),
+    @cargo VARCHAR(25),
     @idSucursal INT,
-    @turno VARCHAR(30),
+    @turno VARCHAR(20),
     @FraseClave NVARCHAR(128) -- Para cifrado
 AS
 BEGIN
@@ -137,17 +164,17 @@ BEGIN
 
     SET @dniExistente = (SELECT COUNT(*) 
                          FROM supermercado.empleado 
-                         WHERE CONVERT(VARCHAR(256), DecryptByPassPhrase(@FraseClave, dni)) = @dni);
+                         WHERE CONVERT(VARCHAR(10), DecryptByPassPhrase(@FraseClave, dni)) = @dni);
 
     -- Verificar si ya existe un empleado con el mismo correo personal (descifrado)
     SET @emailPersonalExistente = (SELECT COUNT(*) 
                                    FROM supermercado.empleado 
-                                   WHERE CONVERT(VARCHAR(256), DecryptByPassPhrase(@FraseClave, email_personal)) = @email_personal);
+                                   WHERE CONVERT(VARCHAR(100), DecryptByPassPhrase(@FraseClave, email_personal)) = @email_personal);
 
     -- Verificar si ya existe un empleado con el mismo correo de empresa (descifrado)
     SET @emailEmpresaExistente = (SELECT COUNT(*) 
                                   FROM supermercado.empleado 
-                                  WHERE CONVERT(VARCHAR(256), DecryptByPassPhrase(@FraseClave, email_empresa)) = @email_empresa);
+                                  WHERE CONVERT(VARCHAR(100), DecryptByPassPhrase(@FraseClave, email_empresa)) = @email_empresa);
 
     -- Verificar condiciones
     IF @dniExistente > 0 AND @emailPersonalExistente > 0 AND @emailEmpresaExistente > 0
@@ -264,8 +291,13 @@ BEGIN
     ELSE
     BEGIN
         -- Si no existe, insertar el nuevo medio de pago
-        INSERT INTO ventas.mediosDePago (nombre)
-        VALUES (@nombre);
+		BEGIN TRY
+			INSERT INTO ventas.mediosDePago (nombre) VALUES (@nombre);
+		END TRY
+		BEGIN CATCH
+			print 'se ingresaron mal los datos';
+			RETURN;
+		END CATCH
 
         -- Registro de inserción
         DECLARE @mensajeInsercion VARCHAR(1000);
@@ -292,8 +324,14 @@ BEGIN
     )
     BEGIN
         -- Insertar en la tabla linea_de_producto
-        INSERT INTO catalogo.linea_de_producto (nombre, categoria)
-        VALUES (@nombre, @categoria);
+		BEGIN TRY
+	        INSERT INTO catalogo.linea_de_producto (nombre, categoria)
+		    VALUES (@nombre, @categoria);
+		END TRY
+		BEGIN CATCH
+			print 'se ingresaron mal los datos';
+			RETURN;
+		END CATCH
 
         -- Registrar en el log que se realizó una inserción
         DECLARE @mensajeInsercion VARCHAR(1000);
@@ -335,8 +373,15 @@ BEGIN
     ELSE
     BEGIN
         -- Insertar nuevo cliente si no existe
-        INSERT INTO ventas.cliente (cuil, tipo_cliente, genero)
-        VALUES (@cuil, @tipoCliente, @genero);
+		BEGIN TRY
+			INSERT INTO ventas.cliente (cuil, tipo_cliente, genero)
+			VALUES (@cuil, @tipoCliente, @genero);
+		END TRY
+		BEGIN CATCH
+			print 'hubo un error';
+			RETURN;
+		END CATCH
+
 
         -- Obtener el ID del cliente recién insertado
         SELECT @idCliente = SCOPE_IDENTITY();
@@ -390,8 +435,14 @@ BEGIN
     END
 
     -- 1. Insertar la factura sin total ni totalConIVA (aún por calcular)
-    INSERT INTO ventas.factura (nroFactura, tipo_Factura, fecha, hora, idMedio_de_pago, idPago, estadoDePago)
-    VALUES (@nroFactura, @tipoFactura, @fecha, @hora, @idMedioDePago, @idPago, 'pagada');
+	BEGIN TRY
+		INSERT INTO ventas.factura (nroFactura, tipo_Factura, fecha, hora, idMedio_de_pago, idPago, estadoDePago)
+		VALUES (@nroFactura, @tipoFactura, @fecha, @hora, @idMedioDePago, @idPago, 'pagada');
+	END TRY
+	BEGIN CATCH
+        print 'error de numero de factura por formar XXX-XX-XXXX';
+        RETURN;
+	END CATCH
 
     -- Obtener el ID de la factura recién creada
     SET @idFactura = SCOPE_IDENTITY();
@@ -644,9 +695,15 @@ BEGIN
     IF @nuevoTelefono IS NOT NULL
     BEGIN
         -- Actualizamos el teléfono
-        UPDATE supermercado.sucursal
-        SET telefono = @nuevoTelefono
-        WHERE id = @idSucursal;
+		BEGIN TRY
+			UPDATE supermercado.sucursal
+			SET telefono = @nuevoTelefono
+			WHERE id = @idSucursal;
+		END TRY
+		BEGIN CATCH
+			print 'hubo un error - ingreso de datos erroneos por telefono';
+			RETURN;
+		END CATCH
 
         -- Verificamos si se actualizó el campo y registramos el log
         IF @@ROWCOUNT > 0
@@ -773,9 +830,15 @@ BEGIN
     WHERE id = @IdProducto;
 
     -- Actualiza el precio del producto con el id proporcionado
-    UPDATE catalogo.producto
-    SET Precio = @NuevoPrecio
-    WHERE id = @IdProducto;
+	BEGIN TRY
+	    UPDATE catalogo.producto
+		SET Precio = @NuevoPrecio
+		WHERE id = @IdProducto;
+	END TRY
+	BEGIN CATCH
+        print 'se ingresaron mal los datos- el precio no puede ser 0';
+        RETURN;
+	END	CATCH
 
     -- Comprobar si el producto fue actualizado
     IF @@ROWCOUNT = 0

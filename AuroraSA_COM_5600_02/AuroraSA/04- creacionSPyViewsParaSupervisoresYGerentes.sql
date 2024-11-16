@@ -1,3 +1,16 @@
+/*
+Base de datos aplicada
+Grupo 2
+Integrantes:
+	Edilberto Guzman
+	Zois Andres Uziel Ruggiero Bellon
+	Karen Anabella Bursa
+	Jonathan Ivan Aranda Robles
+
+Nro de entrega: 3
+Fecha de entraga: 15/11/2024
+*/
+
 use COM5600G02;
 go
 

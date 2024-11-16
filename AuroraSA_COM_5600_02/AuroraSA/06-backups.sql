@@ -1,3 +1,16 @@
+/*
+Base de datos aplicada
+Grupo 2
+Integrantes:
+	Edilberto Guzman
+	Zois Andres Uziel Ruggiero Bellon
+	Karen Anabella Bursa
+	Jonathan Ivan Aranda Robles
+
+Nro de entrega: 5
+Fecha de entraga: 15/11/2024
+*/
+
 ---declaro todo al principio para poder hacer execute
 DECLARE @RutaBase NVARCHAR(255) = 'C:\backup\'; --poner siempre al final la barra \
 DECLARE @ejecutarbackup NVARCHAR(MAX); 

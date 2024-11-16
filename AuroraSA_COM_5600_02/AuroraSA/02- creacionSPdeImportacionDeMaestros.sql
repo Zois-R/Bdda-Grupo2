@@ -1,4 +1,17 @@
-﻿USE COM5600G02
+﻿/*
+Base de datos aplicada
+Grupo 2
+Integrantes:
+	Edilberto Guzman
+	Zois Andres Uziel Ruggiero Bellon
+	Karen Anabella Bursa
+	Jonathan Ivan Aranda Robles
+
+Nro de entrega: 4
+Fecha de entraga: 15/11/2024
+*/
+
+USE COM5600G02
 GO
 
 
@@ -106,8 +119,8 @@ BEGIN
         apellido        VARCHAR(30) COLLATE Latin1_General_CI_AI,
         dni             INT,
         direccion       VARCHAR(100) COLLATE Latin1_General_CI_AI,
-        email_personal  VARCHAR(80) COLLATE Latin1_General_CI_AI,
-        email_empresa   VARCHAR(80) COLLATE Latin1_General_CI_AI,
+        email_personal  VARCHAR(100) COLLATE Latin1_General_CI_AI,
+        email_empresa   VARCHAR(100) COLLATE Latin1_General_CI_AI,
         cuil            VARCHAR(20) NULL,
         cargo           VARCHAR(20) COLLATE Latin1_General_CI_AI,
         idSucursal      VARCHAR(30) COLLATE Latin1_General_CI_AI,
@@ -138,7 +151,7 @@ BEGIN
         SELECT e.legajo,
                EncryptByPassPhrase(@FraseClave, e.nombre) AS nombre,
                EncryptByPassPhrase(@FraseClave, e.apellido) AS apellido,
-               EncryptByPassPhrase(@FraseClave, CAST(e.dni AS VARCHAR(12))) AS dni,
+               EncryptByPassPhrase(@FraseClave, CAST(e.dni AS VARCHAR(10))) AS dni,
                EncryptByPassPhrase(@FraseClave, e.direccion) AS direccion,
                EncryptByPassPhrase(@FraseClave, e.email_personal) AS email_personal,
 			   EncryptByPassPhrase(@FraseClave, e.email_empresa) AS email_empresa,

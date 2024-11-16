@@ -1,4 +1,17 @@
-﻿use COM5600G02 
+﻿/*
+Base de datos aplicada
+Grupo 2
+Integrantes:
+	Edilberto Guzman
+	Zois Andres Uziel Ruggiero Bellon
+	Karen Anabella Bursa
+	Jonathan Ivan Aranda Robles
+
+Nro de entrega: 4
+Fecha de entraga: 15/11/2024
+*/
+
+use COM5600G02 
 go
 
 -- insertar registro en tabla de la empresa
@@ -77,14 +90,6 @@ go
 select * from registros.bitácora
 go
 
-
---archivo de clientes.csv
-EXEC ventas.importar_clientes 'C:\importar\DatosClientes.csv';
-go
-select * from ventas.cliente
-go
-select * from registros.bitácora
-go
 
 
 -------------------------revisar los datos 
