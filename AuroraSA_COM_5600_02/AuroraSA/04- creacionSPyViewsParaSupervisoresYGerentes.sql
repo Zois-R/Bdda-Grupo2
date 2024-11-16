@@ -1,15 +1,50 @@
-/*
-Base de datos aplicada
-Grupo 2
-Integrantes:
-	Edilberto Guzman
-	Zois Andres Uziel Ruggiero Bellon
-	Karen Anabella Bursa
-	Jonathan Ivan Aranda Robles
-
-Nro de entrega: 3
-Fecha de entraga: 15/11/2024
-*/
+/************************************************************
+ *                                                            *
+ *                      BASE DE DATOS APLICADA                *
+ *                                                            *
+ *   INTEGRANTES:                                             *
+ *      - Edilberto Guzman                                    *
+ *      - Zois Andres Uziel Ruggiero Bellone                  *
+ *      - Karen Anabella Bursa                                *
+ *      - Jonathan Ivan Aranda Robles                         *
+ *                                                            *
+ *   NRO. DE ENTREGA: 4                                       *
+ *   FECHA DE ENTREGA: 15/11/2024                             *
+ *                                                            *
+ *   CONSIGNA:                                                *
+ *   Se requiere que importe toda la información antes        *
+ *   mencionada a la base de datos:                           *
+ *   • Genere los objetos necesarios (store procedures,       *
+ *     funciones, etc.) para importar los archivos antes      *
+ *     mencionados. Tenga en cuenta que cada mes se           *
+ *     recibirán archivos de novedades con la misma           *
+ *     estructura, pero datos nuevos para agregar a cada      *
+ *     maestro.                                               *
+ *   • Considere este comportamiento al generar el código.    *
+ *     Debe admitir la importación de novedades               *
+ *     periódicamente.                                        *
+ *   • Cada maestro debe importarse con un SP distinto. No    *
+ *     se aceptarán scripts que realicen tareas por fuera     *
+ *     de un SP.                                              *
+ *   • La estructura/esquema de las tablas a generar será     *
+ *     decisión suya. Puede que deba realizar procesos de     *
+ *     transformación sobre los maestros recibidos para       *
+ *     adaptarlos a la estructura requerida.                  *
+ *                                                            *
+ *   • Los archivos CSV/JSON no deben modificarse. En caso de *
+ *     que haya datos mal cargados, incompletos, erróneos,    *
+ *     etc., deberá contemplarlo y realizar las correcciones  *
+ *     en el fuente SQL. (Sería una excepción si el archivo   *
+ *     está malformado y no es posible interpretarlo como     *
+ *     JSON o CSV).                                           *
+ *                                                            *
+ *   LO QUE HICIMOS EN ESTE SCRIPT:                           *
+ *   Creamos vistas, stores procedures para, por ejemplo,     *
+ *	 insertar una nota de credito. Integramos la utilización  *
+ *	 de la API e incluimos el código para generar             *
+ *	 los resportes en XML.                                    *           
+ *                                                            *
+ *************************************************************/
 
 use COM5600G02;
 go
@@ -26,7 +61,9 @@ FROM
 GO
 
 
-
+ --------------------------------------------------------------------------------------------------------
+  --Creamos vista para registros de ventas
+ --------------------------------------------------------------------------------------------------------
 
 CREATE or ALTER VIEW ventas.vista_de_registros_de_ventas AS
 SELECT  
@@ -72,7 +109,9 @@ go
 
 
 
-
+ --------------------------------------------------------------------------------------------------------
+  --Creamos SP para insertar la nota de crédito
+ --------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE ventas.insertarNotaDeCredito
     @idFactura INT,
@@ -82,7 +121,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Verificar que el valor de 'razon' sea válido
+    -- Verificamos que el valor de 'razon' sea válido
     IF @razon NOT IN ('devPago', 'devProd')
     BEGIN
         RAISERROR ('Razón inválida. Solo se permiten las razones "devPago" (devolución de pago) o "devProd" (devolución del mismo producto).', 16, 1);
@@ -92,7 +131,7 @@ BEGIN
     DECLARE @monto DECIMAL(6, 2);
     DECLARE @idDetalleVenta INT;
 
-    -- Verificar que el detalle de venta existe para la combinación de idFactura e idProducto y obtener el monto correspondiente
+    -- Verificamos que el detalle de venta existe para la combinación de idFactura e idProducto y obtener el monto correspondiente
     SELECT @idDetalleVenta = d.id,
            @monto = CASE 
                         WHEN @razon = 'devPago' THEN subtotal
@@ -110,20 +149,20 @@ BEGIN
         RETURN;
     END;
 
-    -- Verificar si ya existe una nota de crédito para este detalle de venta
+    -- Verificamos si ya existe una nota de crédito para este detalle de venta
     IF EXISTS (SELECT 1 FROM ventas.notasDeCredito WHERE idDetalleVenta = @idDetalleVenta)
     BEGIN
         RAISERROR ('Ya existe una nota de crédito asociada a este detalle de venta.', 16, 1);
         RETURN;  -- Detener la ejecución si ya existe una nota de crédito para este detalle de venta
     END;
 
-    -- Insertar el registro en la tabla ventas.notasDeCredito con el monto calculado
+    -- Insertamos el registro en la tabla ventas.notasDeCredito con el monto calculado
     INSERT INTO ventas.notasDeCredito (idDetalleVenta, monto, razon)
     VALUES (@idDetalleVenta, @monto, @razon);
 
     PRINT 'Nota de crédito insertada exitosamente.';
 
-    -- Registrar la acción en el log
+    -- Registra la acción en el log
     DECLARE @mensajeInsercion VARCHAR(1000);
     SET @mensajeInsercion = FORMATMESSAGE('Devolución de cliente: Nota de crédito para factura %d y producto %d.', @idFactura, @idProducto);
     
@@ -132,6 +171,9 @@ END;
 GO
 
 
+ --------------------------------------------------------------------------------------------------------
+  --Creamos vista de las notas de crédito
+ --------------------------------------------------------------------------------------------------------
 
 CREATE or ALTER VIEW ventas.vista_de_notas_de_credito AS
 SELECT  
@@ -176,7 +218,9 @@ go
 
 
 
-
+ --------------------------------------------------------------------------------------------------------
+  --Creamos SP para consultar a la API y traernos el json que devuelve.
+ --------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE supermercado.obtenerValorDivisa
     @ValorDivisa DECIMAL(8, 2) OUTPUT  -- Parámetro de salida para devolver el valor de la divisa
@@ -227,6 +271,10 @@ EXEC supermercado.obtenerValorDivisa @ValorDivisa = @Divisa OUTPUT;
 PRINT @Divisa;
 */
 
+
+------------------------------------------------------------REPORTES------------------------------------------------------------
+
+
 --------------------------------------------------------------------------------------------------------
 -- TOTAL FACTURADO EN EL MES POR DIA DE LA SEMANA
 --------------------------------------------------------------------------------------------------------
@@ -240,13 +288,13 @@ BEGIN
     -- Configuración de formato para devolver los nombres de días en español
     SET LANGUAGE Spanish;
 
-    -- Declarar una variable para almacenar el valor de la divisa
+    -- Declaramos una variable para almacenar el valor de la divisa
     DECLARE @ValorDivisa DECIMAL(8, 2);
 
-    -- Llamar al procedimiento supermercado.obtenerValorDivisa para obtener el valor de la divisa
+    -- Llama al procedimiento supermercado.obtenerValorDivisa para obtener el valor de la divisa
     EXEC supermercado.obtenerValorDivisa @ValorDivisa OUTPUT;
 
-    -- Verificar si la divisa es NULL (indicando que la respuesta no fue válida)
+    -- Verificamos si la divisa es NULL (indicando que la respuesta no fue válida)
     IF @ValorDivisa IS NULL
     BEGIN
         PRINT 'No se pudo obtener el valor de la divisa o el JSON es inválido';
@@ -291,10 +339,10 @@ BEGIN
 	-- Configuración de formato para devolver los nombres en español
     SET LANGUAGE Spanish;
 
-	-- Declarar una variable para almacenar el valor de la divisa
+	-- Declaramos una variable para almacenar el valor de la divisa
     DECLARE @ValorDivisa DECIMAL(8, 2);
 
-    -- Llamar al procedimiento supermercado.obtenerValorDivisa para obtener el valor de la divisa
+    -- Llama al procedimiento supermercado.obtenerValorDivisa para obtener el valor de la divisa
     EXEC supermercado.obtenerValorDivisa @ValorDivisa OUTPUT;
 
     -- Declarar variables para los límites del trimestre
@@ -622,7 +670,12 @@ END;
 GO
 
 
---- este sp sirve para cifrar con una nueva frase clave, mandandole la anterior clave para que descifre antes de cifrar
+
+
+------------------------------------------------------------------------------------------------------------------------
+--- Este sp sirve para cifrar con una nueva frase clave, mandandole la anterior clave para que descifre antes de cifrar
+------------------------------------------------------------------------------------------------------------------------
+
 
 CREATE OR ALTER PROCEDURE supermercado.CambiarCifradoTablaEmpleado
     @FraseClaveVieja NVARCHAR(128),
@@ -647,6 +700,10 @@ ALTER TABLE supermercado.empleado
 ADD usuario VARCHAR(50);
 GO
 
+
+------------------------------------------------------------------------------------------------------------------------
+--- Creamos SP para insertar un USUARIO
+------------------------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE supermercado.insertarUsuario
     @legajo INT,
@@ -674,93 +731,6 @@ BEGIN
     EXEC registros.insertarLog 'Inserción de usuario para empleado', @mensajeInsercion;
 END;
 GO
-
-
-
-
-
-
-/*
-sp_addrolemember es un procedimiento almacenado en SQL Server que se usa para agregar 
-un usuario o grupo de usuarios a un rol específico dentro de la base de datos. 
-Cuando se ejecuta, concede permisos y privilegios a un usuario basados en el rol especificado. 
-Esto es especialmente útil para asignar permisos de seguridad 
-sin tener que configurarlos manualmente para cada usuario.
-
-Ejemplo de uso de sp_addrolemember:
-
-EXEC sp_addrolemember 'nombre_rol', 'nombre_usuario';
-'nombre_rol': Es el rol al cual se desea agregar el usuario (por ejemplo, cajero, supervisor, db_datareader, etc.).
-'nombre_usuario': Es el nombre del usuario que se quiere añadir a ese rol.
-
-
-CREATE OR ALTER PROCEDURE supermercado.asignarRol
-    @legajo INT
-AS
-BEGIN
-    -- Verificar si el empleado existe, está activo y tiene un usuario asignado
-    IF NOT EXISTS (SELECT 1 FROM supermercado.empleado WHERE legajo = @legajo AND activo = 1 AND usuario IS NOT NULL)
-    BEGIN
-        PRINT 'Empleado no encontrado, inactivo o sin usuario asignado';
-        RETURN;
-    END
-
-    -- Variables para almacenar datos del empleado
-    DECLARE @cargo VARCHAR(20);
-    DECLARE @usuario VARCHAR(50);
-    DECLARE @rol VARCHAR(50);
-
-    -- Obtener el cargo y el usuario del empleado
-    SELECT @cargo = cargo,
-           @usuario = usuario
-    FROM supermercado.empleado
-    WHERE legajo = @legajo;
-
-    -- Verificar que el usuario no sea NULL
-    IF @usuario IS NULL
-    BEGIN
-        PRINT 'El empleado con legajo ' + CAST(@legajo AS VARCHAR(10)) + ' no tiene un usuario asignado';
-        RETURN;
-    END
-
-    -- Determinar el rol según el cargo del empleado
-    SET @rol = CASE 
-                    WHEN @cargo = 'Cajero' THEN 'cajero'
-                    WHEN @cargo = 'Supervisor' THEN 'supervisor'
-                    WHEN @cargo = 'Gerente de sucursal' THEN 'gerente'
-                    ELSE NULL 
-               END;
-
-    -- Validar que el rol sea válido
-    IF @rol IS NOT NULL
-    BEGIN
-        -- Verificar si el usuario ya es miembro del rol
-        IF NOT EXISTS (
-            SELECT 1 
-            FROM sys.database_role_members rm
-            JOIN sys.database_principals p ON rm.member_principal_id = p.principal_id
-            JOIN sys.database_principals r ON rm.role_principal_id = r.principal_id
-            WHERE p.name = @usuario AND r.name = @rol
-        )
-        BEGIN
-            -- Asignar el rol al usuario si no es miembro
-            EXEC sp_addrolemember @rol, @usuario;
-            PRINT 'Rol ' + @rol + ' asignado exitosamente al usuario ' + @usuario;
-        END
-        ELSE
-        BEGIN
-            PRINT 'El usuario ' + @usuario + ' ya es miembro del rol ' + @rol;
-        END
-    END
-    ELSE
-    BEGIN
-        PRINT 'Cargo no válido para asignación de rol para el legajo ' + CAST(@legajo AS VARCHAR(10));
-    END
-END;
-GO
-
-*/
-
 
 
 

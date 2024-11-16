@@ -1,15 +1,48 @@
-/*
-Base de datos aplicada
-Grupo 2
-Integrantes:
-	Edilberto Guzman
-	Zois Andres Uziel Ruggiero Bellon
-	Karen Anabella Bursa
-	Jonathan Ivan Aranda Robles
+/************************************************************
+ *                                                          *
+ *                      BASE DE DATOS APLICADA             *
+ *                                                          *
+ *   INTEGRANTES:                                           *
+ *      - Edilberto Guzman                                  *
+ *      - Zois Andres Uziel Ruggiero Bellone                *
+ *      - Karen Anabella Bursa                              *
+ *      - Jonathan Ivan Aranda Robles                       *
+ *                                                          *
+ *   NRO. DE ENTREGA: 5                                     *
+ *   FECHA DE ENTREGA: 15/11/2024                           *
+ *                                                          *
+ *   CONSIGNA:                                              *
+ *   Cuando un cliente reclama la devolución de un producto *
+ *   se genera una nota de crédito por el valor del         *
+ *   producto o un producto del mismo tipo. En el caso de   *
+ *   que el cliente solicite la nota de crédito, solo los   *
+ *   Supervisores tienen el permiso para generarla. Tener   *
+ *   en cuenta que la nota de crédito debe estar asociada a *
+ *   una Factura con estado pagada. Asigne los roles        *
+ *   correspondientes para poder cumplir con este           *
+ *   requisito.                                             *
+ *                                                          *
+ *   Por otra parte, se requiere que los datos de los       *
+ *   empleados se encuentren encriptados, dado que los      *
+ *   mismos contienen información personal.                 *
+ *                                                          *
+ *   La información de las ventas es de vital importancia   *
+ *   para el negocio, por ello se requiere que se           *
+ *   establezcan políticas de respaldo tanto en las ventas  *
+ *   diarias generadas como en los reportes generados.      *
+ *                                                          *
+ *   Plantee una política de respaldo adecuada para cumplir *
+ *   con este requisito y justifique la misma.              *
+ *                                                          *
+ *   LO QUE HICIMOS EN ESTE SCRIPT:                         *
+ *   Creamos los login de cajeros, supervisores y gerentes. *
+ *   Creamos los roles y les otorgamos los permisos         *
+ *   correspondientes, los cuales eran pedidos en la        *
+ *   consigna utilizando nuestro criterio para que tenga    *
+ *   sentido y para el correcto funcionamiento de la BDD.   *
+ *                                                          *
+ ************************************************************/
 
-Nro de entrega: 5
-Fecha de entraga: 15/11/2024
-*/
 
 --------------------------------------------------------------------------------------------------------
 -- CREACION DE LOGINs
@@ -302,8 +335,6 @@ go
 GRANT EXECUTE ON ventas.generar_venta_con_factura TO cajero;
 go
 
----poner prueba aqui o en otro scritp de testing
-
 
 
 
@@ -486,6 +517,8 @@ go
 
 --select * from supermercado.empleado
 
+
+--Asignamos los usuarios a los roles
 
 ALTER ROLE cajero ADD MEMBER cajero1;
 go

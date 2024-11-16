@@ -1,19 +1,62 @@
-﻿/*
-Base de datos aplicada
-Grupo 2
-Integrantes:
-	Edilberto Guzman
-	Zois Andres Uziel Ruggiero Bellon
-	Karen Anabella Bursa
-	Jonathan Ivan Aranda Robles
+﻿/************************************************************
+ *                                                            *
+ *                      BASE DE DATOS APLICADA                *
+ *                                                            *
+ *   INTEGRANTES:                                             *
+ *      - Edilberto Guzman                                    *
+ *      - Zois Andres Uziel Ruggiero Bellone                  *
+ *      - Karen Anabella Bursa                                *
+ *      - Jonathan Ivan Aranda Robles                         *
+ *                                                            *
+ *   NRO. DE ENTREGA: 4                                       *
+ *   FECHA DE ENTREGA: 15/11/2024                             *
+ *                                                            *
+ *   CONSIGNA:                                                *
+ *   Se requiere que importe toda la información antes        *
+ *   mencionada a la base de datos:                           *
+ *   • Genere los objetos necesarios (store procedures,       *
+ *     funciones, etc.) para importar los archivos antes      *
+ *     mencionados. Tenga en cuenta que cada mes se           *
+ *     recibirán archivos de novedades con la misma           *
+ *     estructura, pero datos nuevos para agregar a cada      *
+ *     maestro.                                               *
+ *   • Considere este comportamiento al generar el código.    *
+ *     Debe admitir la importación de novedades               *
+ *     periódicamente.                                        *
+ *   • Cada maestro debe importarse con un SP distinto. No    *
+ *     se aceptarán scripts que realicen tareas por fuera     *
+ *     de un SP.                                              *
+ *   • La estructura/esquema de las tablas a generar será     *
+ *     decisión suya. Puede que deba realizar procesos de     *
+ *     transformación sobre los maestros recibidos para       *
+ *     adaptarlos a la estructura requerida.                  *
+ *                                                            *
+ *   • Los archivos CSV/JSON no deben modificarse. En caso de *
+ *     que haya datos mal cargados, incompletos, erróneos,    *
+ *     etc., deberá contemplarlo y realizar las correcciones  *
+ *     en el fuente SQL. (Sería una excepción si el archivo   *
+ *     está malformado y no es posible interpretarlo como     *
+ *     JSON o CSV).                                           *
+ *                                                            *
+ *   LO QUE HICIMOS EN ESTE SCRIPT:                           *
+ *   Creamos los store procedures para la importación de      *
+ *   los archivos. Estos tienen tablas temporales, que        *
+ *   usaremos para bajar la información de los mismos. En     *
+ *   los SP tenemos el código necesario para manejar los      *
+ *   conflictos de importación.                               *
+ *                                                            *
+ *************************************************************/
 
-Nro de entrega: 4
-Fecha de entraga: 15/11/2024
-*/
 
 USE COM5600G02
 GO
 
+
+
+
+ --------------------------------------------------------------------------------------------------------
+  --Creamos SP para importar la sucursal
+ --------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE supermercado.importarSucursal 
     @direccion VARCHAR(1000)
@@ -23,7 +66,7 @@ BEGIN
     CREATE TABLE #sucursal
     (
         ciudad         VARCHAR(40) COLLATE Latin1_General_CI_AI,
-        reemplazar     VARCHAR(40) COLLATE Latin1_General_CI_AI,  -- Asegúrate de que 'reemplazar' sea la columna correcta
+        reemplazar     VARCHAR(40) COLLATE Latin1_General_CI_AI,  
         direccion      VARCHAR(150) COLLATE Latin1_General_CI_AI,
         horario        VARCHAR(100) COLLATE Latin1_General_CI_AI,
         telefono       VARCHAR(20) COLLATE Latin1_General_CI_AI
@@ -106,7 +149,10 @@ GO
 
 
 
--------------
+
+ --------------------------------------------------------------------------------------------------------
+  --Creamos SP para importar los empleados
+ --------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE supermercado.importarEmpleados @direccion VARCHAR(1000), @FraseClave NVARCHAR(128)
 AS
@@ -127,10 +173,10 @@ BEGIN
         turno           VARCHAR(20) COLLATE Latin1_General_CI_AI
     );
 
-    -- Declarar una variable para el SQL dinámico
+    -- Declaramos una variable para SQL dinámico
     DECLARE @sql NVARCHAR(MAX);
 
-    -- Construir la consulta dinámica para OPENROWSET
+    -- Construimos la consulta dinámica para OPENROWSET
     SET @sql = N'
     INSERT INTO #empleados
     SELECT *
@@ -138,14 +184,14 @@ BEGIN
                     ''Excel 12.0 Xml;Database=' + @direccion + ''',
                     ''SELECT * FROM [Empleados$]'');';
 
-    -- Ejecutar la consulta dinámica
+    
     EXEC sp_executesql @sql;
 
-    -- Contar registros en la tabla empleados antes del MERGE
+    -- Contamos los registros en la tabla empleados antes del MERGE
     DECLARE @countBefore INT, @countAfter INT;
     SELECT @countBefore = COUNT(*) FROM supermercado.empleado;
 
-    -- Insertar o actualizar los datos en la tabla empleados con encriptación usando frase clave
+    -- Insertamos o actualizamos los datos en la tabla empleados con encriptación usando frase clave
     MERGE supermercado.empleado AS act
     USING (
         SELECT e.legajo,
@@ -171,7 +217,7 @@ BEGIN
         act.idSucursal <> source.idSucursal OR
         act.turno <> source.turno
     ) THEN 
-        -- Actualizar solo si algún campo es distinto
+        -- Actualizamos solo si algún campo es distinto
         UPDATE SET 
             act.direccion = source.direccion,
             act.email_personal = source.email_personal,
@@ -179,12 +225,12 @@ BEGIN
             act.idSucursal = source.idSucursal,
             act.turno = source.turno
     WHEN NOT MATCHED THEN
-        -- Si el empleado no existe, insertar un nuevo registro encriptado
+        -- Si el empleado no existe, insertamos un nuevo registro encriptado
         INSERT (legajo, nombre, apellido, dni, direccion, email_personal, email_empresa, cargo, idSucursal, turno)
         VALUES (source.legajo, source.nombre, source.apellido, source.dni, source.direccion, 
                 source.email_personal, source.email_empresa, source.cargo, source.idSucursal, source.turno);
 
-    -- Contar registros en la tabla empleados después del MERGE
+    -- Contamos registros en la tabla empleados después del MERGE
     SELECT @countAfter = COUNT(*) FROM supermercado.empleado;
 
     -- Registrar en el log según el resultado
@@ -202,8 +248,11 @@ GO
 
 
 
----------
 
+
+ --------------------------------------------------------------------------------------------------------
+  --Creamos SP para importar Línea de Producto
+ --------------------------------------------------------------------------------------------------------
 
 
 CREATE OR ALTER PROCEDURE catalogo.importarLinea_de_producto
@@ -270,15 +319,15 @@ GO
 
 
 
-
-
-
+ --------------------------------------------------------------------------------------------------------
+  --Creamos SP para importar el Catálogo
+ --------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE catalogo.importarCatalogo
     @direccion VARCHAR(1000)
 AS
 BEGIN
-    -- Crear la tabla temporal para cargar los datos desde el archivo
+    -- Creamos la tabla temporal para cargar los datos desde el archivo
     CREATE TABLE #catalogoTemp
     (
         idProducto      VARCHAR(10),
@@ -303,10 +352,10 @@ BEGIN
         FIRSTROW = 2 
     );';
 
-    -- Ejecutar consulta dinámica
+   
     EXEC sp_executesql @sql;
 
-    -- Limpiar datos incompletos
+    -- Limpiamos datos incompletos
     DELETE FROM #catalogoTemp
     WHERE idProducto IS NULL
       OR categoria IS NULL
@@ -316,10 +365,10 @@ BEGIN
       OR unidad_refer IS NULL
       OR fecha IS NULL;
 
-    -- Variable para control de inserciones
+    -- Variable para controlar las inserciones
     DECLARE @filasAntes INT, @filasDespues INT;
 
-    -- Contar el número de filas en la tabla antes del MERGE
+    -- Contamos el número de filas en la tabla antes del MERGE
     SET @filasAntes = (SELECT COUNT(*) FROM catalogo.producto);
 
 	UPDATE #catalogoTemp
@@ -342,7 +391,7 @@ BEGIN
 	SET nombreProducto = REPLACE(nombreProducto, N'Ã±', 'ñ')
 	WHERE nombreProducto LIKE N'%Ã±%';
 
-    -- Realizar el MERGE
+    -- Realizamos el MERGE
     MERGE catalogo.producto AS target
     USING (
         SELECT 
@@ -358,10 +407,10 @@ BEGIN
         INSERT (nombre, Precio, id_linea)
         VALUES (source.nombre, source.Precio, source.id_linea);
 
-    -- Contar el número de filas después del MERGE
+    -- Contamos el número de filas después del MERGE
     SET @filasDespues = (SELECT COUNT(*) FROM catalogo.producto);
 
-    -- Registrar en el log si hubo inserciones
+    -- Registramos en el log si hubo inserciones
     IF @filasDespues > @filasAntes
     BEGIN
 		DECLARE @mensajeInsercion VARCHAR(1000);
@@ -370,7 +419,7 @@ BEGIN
 		EXEC registros.insertarLog 'importarCatalogo', @mensajeInsercion;
     END;
 
-    -- Eliminar la tabla temporal de datos importados
+    -- Eliminamos la tabla temporal de datos importados
     DROP TABLE #catalogoTemp;
 END;
 GO
@@ -383,11 +432,15 @@ GO
 
 
 
+ --------------------------------------------------------------------------------------------------------
+  --Creamos SP para importar el otro catálogo de productos importados
+ --------------------------------------------------------------------------------------------------------
+
 
 CREATE OR ALTER PROCEDURE catalogo.importarProductosImportados
     @direccion VARCHAR(1000)
 AS
-BEGIN --id, category, name, price, reference_price, reference_unit, date
+BEGIN
     CREATE TABLE #catalogoTemp
     (
         idProducto      VARCHAR(10),
@@ -398,10 +451,10 @@ BEGIN --id, category, name, price, reference_price, reference_unit, date
         precio           VARCHAR(50)
     );
 
-    -- Declarar una variable para el SQL dinámico
+    
     DECLARE @sql NVARCHAR(MAX);
 
-    -- Construir la consulta dinámica para OPENROWSET
+    -- Construimos la consulta dinámica para OPENROWSET
     SET @sql = N'
     INSERT INTO #catalogoTemp
     SELECT *
@@ -409,10 +462,10 @@ BEGIN --id, category, name, price, reference_price, reference_unit, date
                     ''Excel 12.0 Xml;Database=' + @direccion + ''',
                     ''SELECT * FROM [Listado de Productos$]'');';
 
-    -- Ejecutar la consulta dinámica
+    -- Ejecutamos la consulta dinámica
     EXEC sp_executesql @sql;
 	
-	-- Obtener el ID de la línea de producto donde el nombre es 'Importados'
+	-- Obtenemos el ID de la línea de producto donde el nombre es 'Importados'
 	DECLARE @idLineaImportados INT;
 	SELECT @idLineaImportados = id 
 	FROM catalogo.linea_de_producto 
@@ -421,7 +474,7 @@ BEGIN --id, category, name, price, reference_price, reference_unit, date
     -- Variable para control de inserciones
     DECLARE @filasAntes INT, @filasDespues INT;
 
-    -- Contar el número de filas en la tabla antes del MERGE
+    -- Contamos el número de filas en la tabla antes del MERGE
     SET @filasAntes = (SELECT COUNT(*) FROM catalogo.producto);
 
 	-- Insertar o actualizar productos según corresponda
@@ -471,24 +524,25 @@ GO
 
 
 
-
-
+ --------------------------------------------------------------------------------------------------------
+  --Creamos SP para importar el catálogo de Accesorios
+ --------------------------------------------------------------------------------------------------------
 
 
 CREATE OR ALTER PROCEDURE catalogo.importarAccesorios
     @direccion VARCHAR(1000)
 AS
-BEGIN --id,category,name,price,reference_price,reference_unit,date
+BEGIN 
     create table #catalogoTemp
 	(
 		nombreProducto	nvarchar(200), 
 		precio			varchar(50)
 	);
 
-    -- Declarar una variable para el SQL dinámico
+   
     DECLARE @sql NVARCHAR(MAX);
 
-    -- Construir la consulta dinámica para OPENROWSET
+    -- Construimos la consulta dinámica para OPENROWSET
     SET @sql = N'
     INSERT INTO #catalogoTemp
     SELECT *
@@ -496,7 +550,7 @@ BEGIN --id,category,name,price,reference_price,reference_unit,date
                     ''Excel 12.0 Xml;Database=' + @direccion + ''',
                     ''SELECT * FROM [Sheet1$]'');';
 
-    -- Ejecutar la consulta dinámica
+    
     EXEC sp_executesql @sql;
 	
 	-- Obtener el ID de la línea de producto donde el nombre es 'Accesorios'
@@ -508,7 +562,7 @@ BEGIN --id,category,name,price,reference_price,reference_unit,date
 	-- Variable para control de inserciones
     DECLARE @filasAntes INT, @filasDespues INT;
 
-    -- Contar el número de filas en la tabla antes del MERGE
+    -- Contamos el número de filas en la tabla antes del MERGE
     SET @filasAntes = (SELECT COUNT(*) FROM catalogo.producto);
 
 	
@@ -553,14 +607,9 @@ go
 
 
 
-
-
-
-
-
-
-
-
+ --------------------------------------------------------------------------------------------------------
+  --Creamos SP para importar los Medios de Pago
+ --------------------------------------------------------------------------------------------------------
 
 
 CREATE OR ALTER PROCEDURE ventas.importarMedios_de_Pago
@@ -625,6 +674,11 @@ go
 
 
 
+
+
+ --------------------------------------------------------------------------------------------------------
+  --Creamos SP para importar los clientes
+ --------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE ventas.importar_clientes
     @rutaArchivo NVARCHAR(255)  
@@ -699,6 +753,11 @@ GO
 
 
 
+ --------------------------------------------------------------------------------------------------------
+  --Creamos SP para importar las ventas registradas
+ --------------------------------------------------------------------------------------------------------
+
+
 CREATE OR ALTER PROCEDURE ventas.importarVentas_registradas   
     @direccion VARCHAR(1000)
 AS
@@ -738,16 +797,16 @@ BEGIN
         FIRSTROW = 2 
     );';
 
-    -- Ejecutar la consulta dinámica
+    -- Ejecutamos la consulta dinámica
     EXEC sp_executesql @sql;
 
 	 -- Variable para control de inserciones
     DECLARE @filasAntes INT, @filasDespues INT;
 
-    -- Contar el número de filas en la tabla antes del MERGE
+    -- Contamos el número de filas en la tabla antes del MERGE
     SET @filasAntes = (SELECT COUNT(*) FROM ventas.registro_de_ventas);
 
-    -- Actualizar el campo idPago en la tabla temporal
+    -- Se actualiza el campo idPago en la tabla temporal
     UPDATE #ventas
     SET idPago = REPLACE(LTRIM(RTRIM(idPago)), '''', '');
 

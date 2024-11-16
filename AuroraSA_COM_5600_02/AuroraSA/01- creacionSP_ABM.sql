@@ -1,20 +1,41 @@
-/*
-Base de datos aplicada
-Grupo 2
-Integrantes:
-	Edilberto Guzman
-	Zois Andres Uziel Ruggiero Bellon
-	Karen Anabella Bursa
-	Jonathan Ivan Aranda Robles
+/************************************************************
+ *                                                          *
+ *                      BASE DE DATOS APLICADA             *
+ *                                                          *
+ *   INTEGRANTES:                                           *
+ *      - Edilberto Guzman                                  *
+ *      - Zois Andres Uziel Ruggiero Bellone                *
+ *      - Karen Anabella Bursa                              *
+ *      - Jonathan Ivan Aranda Robles                       *
+ *                                                          *
+ *   NRO. DE ENTREGA: 3                                     *
+ *   FECHA DE ENTREGA: 15/11/2024                           *
+ *                                                          *
+ *   CONSIGNA:                                              *
+ *   Genere store procedures para manejar la inserción,     *
+ *   modificación, borrado (si corresponde, también debe    *
+ *   decidir si determinadas entidades solo admitirán       *
+ *   borrado lógico) de cada tabla.                         *
+ *   Los nombres de los store procedures NO deben comenzar  *
+ *   con “SP”.                                              *
+ *                                                          *
+ *   LO QUE HICIMOS EN ESTE SCRIPT:                         *
+ *   Creamos store procedures para la inserción de las      *
+ *   tablas, modificación y borrado lógico. Además, creamos *
+ *   triggers para, por ejemplo, manejar actualizaciones en *
+ *   la tabla de empleados.                                 *
+ *                                                          *
+ ************************************************************/
 
-Nro de entrega: 3
-Fecha de entraga: 15/11/2024
-*/
 
 USE COM5600G02 
 GO
 
----cada inserción, borrado, modificación crea un registro en la tabla bitácora
+
+ --------------------------------------------------------------------------------------------------------
+---Cada inserción, borrado, modificación crea un registro en la tabla bitácora
+ --------------------------------------------------------------------------------------------------------
+
 create or alter procedure registros.insertarLog 
 (
 	@modulo varchar(60),
@@ -31,8 +52,9 @@ end;
 GO
 
 
- 
-
+ --------------------------------------------------------------------------------------------------------
+  --Con este sp creamos la tabla insertarComercio que luego nos va a servir, por ejemplo, para utilizar el cuit del emisor en la factura. 
+ --------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE supermercado.insertarComercio
     @cuit VARCHAR(20),
@@ -72,7 +94,9 @@ END;
 GO
 
 
-
+--------------------------------------------------------------------------------------------------------
+--En este sp insertamos una sucursal en caso de expansión
+--------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE supermercado.insertarSucursal
     @ciudad VARCHAR(40),
@@ -140,7 +164,9 @@ GO
 
 
 
-
+--------------------------------------------------------------------------------------------------------
+--SP para la inserción de un nuevo empleado el cual luego estará cifrado
+--------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE supermercado.insertarEmpleado
     @legajo INT,
@@ -240,6 +266,11 @@ BEGIN
 END;
 GO
 
+
+--------------------------------------------------------------------------------------------------------
+--SP para insertar un nuevo producto
+--------------------------------------------------------------------------------------------------------
+
 go
 CREATE OR ALTER PROCEDURE catalogo.insertarProducto
     @nombre NVARCHAR(200),
@@ -273,8 +304,10 @@ BEGIN
 END;
 GO
 
-
+--------------------------------------------------------------------------------------------------------
 -- Procedimiento para insertar en ventas.mediosDePago
+--------------------------------------------------------------------------------------------------------
+
 CREATE OR ALTER PROCEDURE ventas.insertarMedioDePago
     @nombre VARCHAR(15)
 AS
@@ -309,6 +342,11 @@ END;
 GO
 
 
+
+
+--------------------------------------------------------------------------------------------------------
+--SP para insertar una nueva linea de producto 
+--------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE catalogo.insertarLinea_de_producto
     @nombre VARCHAR(100),
@@ -349,7 +387,9 @@ GO
 
 
 
-
+--------------------------------------------------------------------------------------------------------
+--SP para insertar un nuevo cliente
+--------------------------------------------------------------------------------------------------------
 
 
 CREATE OR ALTER PROCEDURE ventas.insertar_cliente
@@ -391,6 +431,9 @@ END;
 GO
 
 
+--------------------------------------------------------------------------------------------------------
+--SP para generar la venta con factura
+--------------------------------------------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE ventas.generar_venta_con_factura
     @nroFactura CHAR(11),
@@ -517,7 +560,9 @@ GO
 
 
 
-
+--------------------------------------------------------------------------------------------------------
+--Trigger para actualización de empleado
+--------------------------------------------------------------------------------------------------------
 
 
 

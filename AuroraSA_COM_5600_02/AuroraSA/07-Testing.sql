@@ -1,28 +1,45 @@
-/*
-Base de datos aplicada
-Grupo 2
-Integrantes:
-	Edilberto Guzman
-	Zois Andres Uziel Ruggiero Bellon
-	Karen Anabella Bursa
-	Jonathan Ivan Aranda Robles
+/************************************************************
+ *                                                          *
+ *                      BASE DE DATOS APLICADA              *
+ *                                                          *
+ *   INTEGRANTES:                                           *
+ *      - Edilberto Guzman                                  *
+ *      - Zois Andres Uziel Ruggiero Bellone                *
+ *      - Karen Anabella Bursa                              *
+ *      - Jonathan Ivan Aranda Robles                       *
+ *                                                          *
+ *   NRO. DE ENTREGA: 5                                     *
+ *   FECHA DE ENTREGA: 15/11/2024                           *
+ *                                                          *
+ *   TESTING                                                *
+ *                                                          *
+ *   LO QUE HICIMOS EN ESTE SCRIPT:                         *
+ *   Realizamos diferentes tipos de testing, ya sea para    *
+ *   verificar las constraints de check, en la inserción.   *
+ *   Verificamos que no se generen duplicados, también      *
+ *   verificamos los stores de modificación, que se generen *
+ *   las ventas con múltiples productos asociados,          *
+ *   verificando que se guarden correctamente en las tablas *
+ *   detalleVenta y factura.                                *
+ *   Probamos la inserción de notas de crédito, que estén   *
+ *   asociadas a facturas que existen y productos válidos.  *
+ *   Testeamos la correcta importación de los archivos,     *
+ *   actualización e ingreso de nuevas sucursales,          *
+ *   empleados, líneas de producto y catálogos desde los    *
+ *   archivos.                                              *
+ *                                                          *
+ *   Verificamos los reportes.                              *
+ *   Verificamos la correcta encriptación de empleados.     *
+ *   Validamos los roles y permisos.                        *
+ *                                                          *
+ ************************************************************/
 
-Nro de entrega: 3 , 4  5
-Fecha de entraga: 15/11/2024
-*/
 
 --------------------------------------------------------------------------------------------------------------
 --TEST STORES DE CREACIÓN  , entrega 3
 --------------------------------------------------------------------------------------------------------------
 
-/*
-CASO DE TESTING : Descripción breve de la prueba (qué estás probando)
-VARIABLES DE ENTRADA:
-    - @Parametro1: valor de ejemplo
-    - @Parametro2: valor de ejemplo
-RESULTADO ESPERADO: Resultado esperado de la operación (ej. filas afectadas, mensajes, etc.)
-DESCRIPCIÓN: Explicación de lo que debería suceder (detalles sobre la prueba específica y el objetivo)
-*/
+
 
 ---------------------------------------------------------------------
 --TESTS RELACIONADOS CON LA CREACIÓN DE LA BITÁCORA
@@ -39,6 +56,7 @@ DESCRIPCIÓN: Explicación de lo que debería suceder (detalles sobre la prueba esp
 EXEC registros.insertarLog @modulo = 'Autenticación', @texto = 'Inicio de testing exitoso'
 USE COM5600G02;
 select * from registros.bitacora
+
 /*
 CASO DE TESTING 2: Insertar log con el módulo como nulo
 INPUTS:
@@ -100,19 +118,10 @@ go
 
 
 
-
 ---------------------------------------------------------------------
 --TEST INSERCIÓN SUCURSAL
 ---------------------------------------------------------------------
 
-/*
-CASO DE TESTING : Descripción breve de la prueba (qué estás probando)
-VARIABLES DE ENTRADA:
-    - @Parametro1: valor de ejemplo
-    - @Parametro2: valor de ejemplo
-RESULTADO ESPERADO: Resultado esperado de la operación (ej. filas afectadas, mensajes, etc.)
-DESCRIPCIÓN: Explicación de lo que debería suceder (detalles sobre la prueba específica y el objetivo)
-*/
 ------------------ se debe insertar por unica vez, y no debe poder duplicarse
 
 EXEC supermercado.insertarSucursal 'hong king', 
@@ -136,22 +145,12 @@ exec supermercado.borrado_logico_sucursal 4;
 
 
 
-
 ---------------
 
 use COM5600G02;
 ---------------------------------------------------------------------
 --TEST INSERCIÓN EMPLEADO
 ---------------------------------------------------------------------
-
-/*
-CASO DE TESTING : Testeamos que ni el dni ni el email se puedan repetir
-VARIABLES DE ENTRADA:
-    - @Parametro1: valor de ejemplo
-    - @Parametro2: valor de ejemplo
-RESULTADO ESPERADO: Que no nos deje insertar un empleado con legajo duplicado
-
-*/
 
 select * from supermercado.empleado;
 
@@ -181,11 +180,6 @@ EXEC supermercado.insertarEmpleado
 
 ---------------------borrado logico 
 exec supermercado.borrado_logico_empleado 18;
-
-
-
-
-
 
 
 
@@ -327,13 +321,13 @@ EXEC ventas.generar_venta_con_factura
     @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
     @fecha = '1/5/2019',          -- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
-    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
+    @idMedioDePago = 1,             -- ID del medio de pago 
     @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
     @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
     @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
-    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
+    @tipoCliente = 'Normal',       -- Tipo de cliente 
     @genero = 'Male',          -- Género del cliente
-    @cuil = '20-12345678-9',        -- CUIL del cliente (dato ficticio)
+    @cuil = '20-12345678-9',        -- CUIL del cliente 
     @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
 go
 
@@ -352,17 +346,17 @@ VALUES
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
-    @nroFactura = '645-67-8528',    -- Número de factura de ejemplo
-    @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
+    @nroFactura = '645-67-8528',    -- Número de factura 
+    @tipoFactura = 'A',             -- Tipo de factura
     @fecha = '1/5/2019',          -- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
     @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
-    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
-    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
-    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
-    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
+    @idPago = 'PAGO123456',         -- ID del pago 
+    @idEmpleado = 257020,              -- ID del empleado
+    @idSucursal = 3,                -- ID de la sucursal 
+    @tipoCliente = 'Normal',       -- Tipo de cliente
     @genero = 'Male',          -- Género del cliente
-    @cuil = '20-12345678-9',        -- CUIL del cliente (dato ficticio)
+    @cuil = '20-12345678-9',        -- CUIL del cliente 
     @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
 go
 select * from ventas.vista_de_registros_de_ventas where ID_Factura = '645-67-8528';
@@ -372,18 +366,18 @@ DECLARE @productosDetalle ventas.TipoProductosDetalle;
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
-    @nroFactura = '456-57-8528',    -- Número de factura de ejemplo
-    @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
-    @fecha = '1/5/2019',          -- Fecha de la venta
-    @hora = '13:08:00',             -- Hora de la venta
-    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
-    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
-    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
-    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
-    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
-    @genero = 'Male',          -- Género del cliente
-    @cuil = '20-12345678-9',        -- CUIL del cliente (dato ficticio)
-    @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
+    @nroFactura = '456-57-8528',    
+    @tipoFactura = 'A',             
+    @fecha = '1/5/2019',          
+    @hora = '13:08:00',            
+    @idMedioDePago = 1,             
+    @idPago = 'PAGO123456',         
+    @idEmpleado = 257020,              
+    @idSucursal = 3,                
+    @tipoCliente = 'Normal',      
+    @genero = 'Male',          
+    @cuil = '20-12345678-9',        
+    @productosDetalle = @productosDetalle; 
 go
 
 select * from ventas.vista_de_registros_de_ventas where ID_Factura='456-67-8428';
@@ -470,7 +464,7 @@ select * from ventas.vista_de_registros_de_ventas;
 
 
 ---------------------------------------------------------------------
---REPORTES  , entrega 4
+--TEST REPORTES  , entrega 4
 ---------------------------------------------------------------------
 -----------------
 EXEC ventas.TotalFacturadoPorDiaSemana @mes = 1, @anio = 2019;
@@ -494,7 +488,12 @@ go
 exec ventas.reporte_total_acumulado_ventas '2019-02-15', 2;
 go
 
------------------testeo de ultimo producto vendido
+
+
+---------------------------------------------------------------------
+-----------------Testeo de ultimo producto vendido
+---------------------------------------------------------------------
+
 ---hacer una venta en el dia de hoy, y verficiar que este dentro del rango de fecha entre hoy y ayer
 ---primero me fijo los productos que hay
 select * from catalogo.producto order by id desc;   ---!!!!!OJO PRIMERO VER EL PRODUCTO Y LUEGO PONER LOS DATOS
@@ -535,14 +534,9 @@ select * from ventas.vista_de_registros_de_ventas;
 
 
 
-
-
-
-
-
----------------------------------------------------------------------
+--------------------------------------------------------------------------
 --TEST DE SEGURIDAD   entrega 5
----------------------------------------------------------------------
+--------------------------------------------------------------------------
 
 --------------mostrar incriptados de la tabla empleados
 select * from supermercado.empleado;
@@ -554,11 +548,10 @@ go
 
 
 
-
-
-
-
+---------------------------------------------------------------------
 ---------------------------------logins , usuarios y roles 
+---------------------------------------------------------------------
+
 
 use COM5600G02;
 use master
@@ -579,18 +572,18 @@ VALUES (6520, 5)
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
-    @nroFactura = '750-67-2026',    -- Número de factura de ejemplo
-    @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
+    @nroFactura = '750-67-2026',    -- Número de factura 
+    @tipoFactura = 'A',             -- Tipo de factura
     @fecha = '14/11/2024',          -- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
-    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
-    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
-    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
-    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
-    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
+    @idMedioDePago = 1,             -- ID del medio de pago 
+    @idPago = 'PAGO123456',         -- ID del pago
+    @idEmpleado = 257020,              -- ID del empleado
+    @idSucursal = 3,                -- ID de la sucursal 
+    @tipoCliente = 'Normal',       -- Tipo de cliente 
     @genero = 'Male',          -- Género del cliente
-    @cuil = '20-12345678-7',        -- CUIL del cliente (dato ficticio)
-    @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
+    @cuil = '20-12345678-7',        -- CUIL del cliente 
+    @productosDetalle = @productosDetalle; 
 go
 
 select * from ventas.vista_de_registros_de_ventas where ID_Factura = '750-67-2026';
@@ -598,7 +591,7 @@ select * from ventas.vista_de_registros_de_ventas where ID_Factura = '750-67-202
 REVERT;		
 
 
------------luego lo probamos con un supervisor 
+-----------Luego lo probamos con un supervisor 
 EXECUTE AS LOGIN = 'supervisor1';						
 SELECT CURRENT_USER;
 
@@ -608,17 +601,17 @@ VALUES (6528, 1)
 
 -- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
-    @nroFactura = '750-67-8426',    -- Número de factura de ejemplo
-    @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
-    @fecha = '14/11/2024',          -- Fecha de la venta
-    @hora = '13:08:00',             -- Hora de la venta
-    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
-    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
-    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
-    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
-    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
-    @genero = 'Male',          -- Género del cliente
-    @cuil = '20-12345678-7',        -- CUIL del cliente (dato ficticio)
+    @nroFactura = '750-67-8426',    
+    @tipoFactura = 'A',             
+    @fecha = '14/11/2024',          
+    @hora = '13:08:00',            
+    @idMedioDePago = 1,             
+    @idPago = 'PAGO123456',         
+    @idEmpleado = 257020,              
+    @idSucursal = 3,               
+    @tipoCliente = 'Normal',       -
+    @genero = 'Male',          
+    @cuil = '20-12345678-7',       
     @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
 go
 

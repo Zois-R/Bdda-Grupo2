@@ -1,15 +1,38 @@
-/*
-Base de datos aplicada
-Grupo 2
-Integrantes:
-	Edilberto Guzman
-	Zois Andres Uziel Ruggiero Bellon
-	Karen Anabella Bursa
-	Jonathan Ivan Aranda Robles
+/************************************************************
+ *                                                          *
+ *                      BASE DE DATOS APLICADA              *
+ *                                                          *
+ *   INTEGRANTES:                                           *
+ *      - Edilberto Guzman                                  *
+ *      - Zois Andres Uziel Ruggiero Bellone                *
+ *      - Karen Anabella Bursa                              *
+ *      - Jonathan Ivan Aranda Robles                       *
+ *                                                          *
+ *   NRO. DE ENTREGA: 3                                     *
+ *   FECHA DE ENTREGA: 15/11/2024                           *
+ *															*
+ *   CONSIGNA:
+ *   Cree la base de datos, entidades y relaciones.         *
+ *   Incluya restricciones y claves. Deberá entregar un     *
+ *   archivo .sql con el script completo de creación        *
+ *   (debe funcionar si se lo ejecuta “tal cual” es         *
+ *   entregado). Incluya comentarios para indicar qué hace  *
+ *   cada módulo de código.                                 *
+ *                                                          *
+ *   Genere esquemas para organizar de forma lógica los     *
+ *   componentes del sistema y aplique esto en la creación  *
+ *   de objetos. NO use el esquema “dbo”.                   *
+ *															*
+ *	 LO QUE HICIMOS EN ESTE SCRIPT:							*
+ *   Creamos la base de datos, los 4					    *
+ *   esquemas para una correcta organización, junto con las *
+ *   tablas con sus correspondientes constraints y los      *
+ *   índices.                                               *
+ *                                                          *
+ ************************************************************/
 
-Nro de entrega: 3
-Fecha de entraga: 15/11/2024
-*/
+
+
 
 use master -- drop database COM5600G02
 go
@@ -23,7 +46,8 @@ go
 use COM5600G02 
 go
 
-----------------esquema de sumpermercado : orden : sucursal, empleado
+----------------CREAMOS LOS ESQUEMAS --------------------
+
 IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'registros')
 BEGIN
 	EXEC('CREATE SCHEMA registros')
@@ -46,7 +70,10 @@ END
 go
 
 
-------------------------
+--------------------------------------------------------------------------------------------------------
+-----------------------------------------  ESQUEMA REGISTROS -------------------------------------------
+--------------------------------------------------------------------------------------------------------
+
 -- Esta tabla se emplea como bitácora (log) de las operaciones de inserción, borrado y modificación
 
 create table registros.bitácora(
@@ -58,7 +85,13 @@ create table registros.bitácora(
 		constraint chk_txt_not_empty check (len(txt) > 0)
 );
 go
---------------------------------------------------------------------------
+
+
+
+ --------------------------------------------------------------------------------------------------------
+-----------------------------------------  ESQUEMA SUPERMERCADO -----------------------------------------
+ --------------------------------------------------------------------------------------------------------
+
 
 CREATE TABLE supermercado.Comercio (
 		cuit VARCHAR(20), 
@@ -98,11 +131,11 @@ create table supermercado.empleado
 	(
 		legajo			int,
 		nombre          VARBINARY(256),     -- Cambiado a VARBINARY para encriptación
-		apellido        VARBINARY(256),     -- Cambiado a VARBINARY para encriptación
-		dni             VARBINARY(256),     -- Cambiado a VARBINARY para encriptación
-		direccion       VARBINARY(256),     -- Cambiado a VARBINARY para encriptación
-		email_personal  VARBINARY(256),     -- Cambiado a VARBINARY para encriptación
-		email_empresa	VARBINARY(256),     -- Cambiado a VARBINARY para encriptación
+		apellido        VARBINARY(256),     
+		dni             VARBINARY(256),     
+		direccion       VARBINARY(256),     
+		email_personal  VARBINARY(256),     
+		email_empresa	VARBINARY(256),     
 		cargo			varchar(25),
 		idSucursal		int,
 		turno			varchar(20), 
@@ -117,7 +150,10 @@ go
 
 
 
----------------------esquema catalogo
+ --------------------------------------------------------------------------------------------------------
+-----------------------------------------  ESQUEMA CATALOGO ---------------------------------------------
+ --------------------------------------------------------------------------------------------------------
+
 
 
 create table catalogo.linea_de_producto
@@ -143,7 +179,10 @@ create table catalogo.producto
 go
 
 
-------------------------
+
+ --------------------------------------------------------------------------------------------------------
+-----------------------------------------  ESQUEMA VENTAS ---------------------------------------------
+ --------------------------------------------------------------------------------------------------------
 
 create table ventas.mediosDePago
 	(
@@ -232,7 +271,7 @@ CREATE TABLE ventas.notasDeCredito
 GO
 
 /*
-los parámetros de tipo TABLE no se pueden pasar directamente a un procedimiento almacenado. 
+Los parámetros de tipo TABLE no se pueden pasar directamente a un procedimiento almacenado. 
 Una alternativa es crear una variable de tipo de tabla en la base de datos, 
 que luego podemos usar como parámetro en el procedimiento.
 
@@ -270,7 +309,11 @@ create table ventas.ventasProductosNoRegistrados
 go
 
 
--------------------- creacion de indices ---fijarse que otros mas convienen
+
+ --------------------------------------------------------------------------------------------------------
+-----------------------------------------  CREACIÓN DE ÍNDICES ---------------------------------------------
+ --------------------------------------------------------------------------------------------------------
+
 create nonclustered index ix_nombre on catalogo.producto(nombre)
 go
 create nonclustered index ix_ciudad on supermercado.sucursal(ciudad)
