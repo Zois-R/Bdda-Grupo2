@@ -879,28 +879,31 @@ BEGIN
 	    UPDATE catalogo.producto
 		SET Precio = @NuevoPrecio
 		WHERE id = @IdProducto;
+
+		-- Comprobar si el producto fue actualizado
+		IF @@ROWCOUNT = 0
+		BEGIN
+		    PRINT 'No se encontró el producto con el id especificado.';
+		END
+		ELSE
+		BEGIN
+			-- Crear el mensaje para insertar en el log
+			SET @mensajeInsercion = FORMATMESSAGE('Producto con nombre %s, precio nuevo %s y línea %d', @nombre, CONVERT(VARCHAR(20), @NuevoPrecio, 1), @id_linea);
+        
+			-- Insertar el log
+			EXEC registros.insertarLog 'ModificacionProducto', @mensajeInsercion;
+
+			-- Mensaje de éxito
+			PRINT 'Precio del producto actualizado correctamente.';
+		END
+
 	END TRY
 	BEGIN CATCH
         print 'se ingresaron mal los datos- el precio no puede ser 0';
         RETURN;
 	END	CATCH
 
-    -- Comprobar si el producto fue actualizado
-    IF @@ROWCOUNT = 0
-    BEGIN
-        PRINT 'No se encontró el producto con el id especificado.';
-    END
-    ELSE
-    BEGIN
-        -- Crear el mensaje para insertar en el log
-        SET @mensajeInsercion = FORMATMESSAGE('Producto con nombre %s, precio nuevo %s y línea %d', @nombre, CONVERT(VARCHAR(20), @NuevoPrecio, 1), @id_linea);
-        
-        -- Insertar el log
-        EXEC registros.insertarLog 'ModificacionProducto', @mensajeInsercion;
-
-        -- Mensaje de éxito
-        PRINT 'Precio del producto actualizado correctamente.';
-    END
+    
 END;
 GO
 

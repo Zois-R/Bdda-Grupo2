@@ -120,8 +120,6 @@ select * from ventas.detalleVenta
 go
 select * from ventas.registro_de_ventas
 go
-select * from ventas.cliente
-go
 select * from registros.bitácora
 go
 

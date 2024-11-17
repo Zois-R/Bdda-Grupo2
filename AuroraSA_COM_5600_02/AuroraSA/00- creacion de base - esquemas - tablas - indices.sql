@@ -126,6 +126,16 @@ create table supermercado.sucursal
 go
 
 
+/*
+si no establecemos el tamaño de los campos de la tabla a encriptar con 256 bytes
+se produce un error debido a que la longitud de los campos de la tabla empleados 
+es menor al proceso de encriptación EncryptByPassPhrase que genera una longitud de salida mayor 
+al tamaño original de los campos a importar.  
+ejemplo error:
+Los datos binarios o de la cadena se truncan en la columna "email_empresa" 
+de la tabla "COM5600G02.supermercado.empleado". Valor truncado: "".
+por eso el tamaño es varbinary(256).
+*/
 
 create table supermercado.empleado 
 	(

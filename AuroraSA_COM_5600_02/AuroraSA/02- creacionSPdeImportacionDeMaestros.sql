@@ -82,11 +82,12 @@ BEGIN
     FROM OPENROWSET(''Microsoft.ACE.OLEDB.12.0'',
                     ''Excel 12.0 Xml;Database=' + @direccion + ''',
                     ''SELECT * FROM [sucursal$]'');';
-
+	
     -- Ejecutar la consulta dinámica
     EXEC sp_executesql @sql;
 
     -- Limpiar y formatear el campo 'horario'
+	
     UPDATE #sucursal
     SET horario = REPLACE(
                 REPLACE(
@@ -101,17 +102,15 @@ BEGIN
                 ),
                 '–', ' – '  -- Asegurar espacios antes y después del guion largo
             );
-
+	
     -- Contar registros en la tabla sucursal antes del MERGE
     DECLARE @countBefore INT, @countAfter INT;
     SELECT @countBefore = COUNT(*) FROM supermercado.sucursal;
-
     -- Obtener el idComercio del único registro de la tabla Comercio
     DECLARE @idComercio NVARCHAR(20);
     SELECT @idComercio = cuit
     FROM supermercado.Comercio
     WHERE cuit IS NOT NULL;
-
     -- Insertar o actualizar en la tabla sucursal
     MERGE supermercado.sucursal AS act
     USING #sucursal AS source
@@ -129,7 +128,6 @@ BEGIN
         INSERT (idComercio, ciudad, localidad, direccion, horario, telefono)
         VALUES (@idComercio, source.ciudad, source.reemplazar, source.direccion, 
                 source.horario, source.telefono);
-
     -- Contar registros en la tabla sucursal después del MERGE
     SELECT @countAfter = COUNT(*) FROM supermercado.sucursal;
 
@@ -165,8 +163,8 @@ BEGIN
         apellido        VARCHAR(30) COLLATE Latin1_General_CI_AI,
         dni             INT,
         direccion       VARCHAR(100) COLLATE Latin1_General_CI_AI,
-        email_personal  VARCHAR(100) COLLATE Latin1_General_CI_AI,
-        email_empresa   VARCHAR(100) COLLATE Latin1_General_CI_AI,
+        email_personal  VARCHAR(57) COLLATE Latin1_General_CI_AI,
+        email_empresa   VARCHAR(57) COLLATE Latin1_General_CI_AI,
         cuil            VARCHAR(20) NULL,
         cargo           VARCHAR(20) COLLATE Latin1_General_CI_AI,
         idSucursal      VARCHAR(30) COLLATE Latin1_General_CI_AI,

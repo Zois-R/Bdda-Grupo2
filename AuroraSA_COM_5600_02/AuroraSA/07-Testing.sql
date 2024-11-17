@@ -179,7 +179,7 @@ EXEC supermercado.insertarEmpleado
 
 
 ---------------------borrado logico 
-exec supermercado.borrado_logico_empleado 18;
+exec supermercado.borrado_logico_empleado 16;
 
 
 
@@ -201,7 +201,7 @@ select * from catalogo.linea_de_producto where categoria =  'aceite_vinagre_y_sa
 
 
 -----borrado logico
-exec catalogo.borrado_logico_producto 148;
+exec catalogo.borrado_logico_lineaDeProducto 'Almacen';
 
 
 --- no puede insertar null en la linea de producto.
@@ -264,7 +264,7 @@ exec catalogo.insertarProducto 'Samsumg Galaxy A04',160.00,160;
 ---no admite duplicados
 exec catalogo.insertarProducto 'Samsumg Galaxy A03',150.00,150;
 -- Modificar un producto existente , modificar precio
-exec catalogo.ActualizarPrecioProducto 6524,190.00;
+exec catalogo.ActualizarPrecioProducto 6524,200.00;
 select * from catalogo.producto order by id desc;
 
 -- borrado logico 
@@ -418,6 +418,10 @@ select * from registros.bitácora
 go
 
 --actualizacion y ingreso de nuevas sucursales por archivo
+/*
+observar que en la primera ejecucion de este SP se afectaran TODAS LAS FILAS 
+debido a que ademas de agregarse un registro se actualizaran los telefonos
+*/
 EXEC supermercado.importarSucursal 'C:\importar\nuevosDatos\Informacion_complementaria_2.xlsx';
 GO
 select * from supermercado.sucursal;
