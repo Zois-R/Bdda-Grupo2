@@ -76,6 +76,9 @@ go
 
 -- Esta tabla se emplea como bitácora (log) de las operaciones de inserción, borrado y modificación
 
+if not exists (SELECT * FROM sys.tables WHERE name = 'bitácora' AND schema_id = SCHEMA_ID('registros'))
+begin
+
 create table registros.bitácora(
 		id		int identity(1,1),
 		txt		varchar(300) not null,
@@ -84,6 +87,9 @@ create table registros.bitácora(
 		constraint pk_registro primary key clustered (id),
 		constraint chk_txt_not_empty check (len(txt) > 0)
 );
+
+end
+
 go
 
 
@@ -92,7 +98,8 @@ go
 -----------------------------------------  ESQUEMA SUPERMERCADO -----------------------------------------
  --------------------------------------------------------------------------------------------------------
 
-
+ if not exists (SELECT * FROM sys.tables WHERE name = 'Comercio' AND schema_id = SCHEMA_ID('supermercado'))
+begin
 CREATE TABLE supermercado.Comercio (
 		cuit VARCHAR(20), 
 		nombre_comercio varchar(30) not null,           
@@ -101,11 +108,16 @@ CREATE TABLE supermercado.Comercio (
 		constraint pk_comercio primary key clustered (cuit),
 		CONSTRAINT chk_cuit
 			CHECK (cuit LIKE '[0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9]')
-);    
+); 
+end
+
+
+   
  
 go
 
-
+if not exists (SELECT * FROM sys.tables WHERE name = 'sucursal' AND schema_id = SCHEMA_ID('supermercado'))
+begin
 create table supermercado.sucursal 
 	(
 		id			int identity(1,1),
@@ -123,6 +135,8 @@ create table supermercado.sucursal
 		    telefono LIKE '[0-9][0-9][0-9]-[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]'
 		)
 	);
+end
+
 go
 
 
@@ -137,7 +151,9 @@ de la tabla "COM5600G02.supermercado.empleado". Valor truncado: "".
 por eso el tamaño es varbinary(256).
 */
 
-create table supermercado.empleado 
+if not exists (SELECT * FROM sys.tables WHERE name = 'empleado' AND schema_id = SCHEMA_ID('supermercado'))
+begin
+create table supermercado.empleado
 	(
 		legajo			int,
 		nombre          VARBINARY(256),     -- Cambiado a VARBINARY para encriptación
@@ -149,10 +165,13 @@ create table supermercado.empleado
 		cargo			varchar(25),
 		idSucursal		int,
 		turno			varchar(20), 
+		usuario			varchar(50) default '',
 		activo			bit default 1,-- para el borrado logico
 		constraint pk_empleado primary key clustered (legajo),
 		constraint fk_sucursal foreign key (idSucursal) references supermercado.sucursal(id)
 	);
+end
+
 go
 
                                        
@@ -164,8 +183,8 @@ go
 -----------------------------------------  ESQUEMA CATALOGO ---------------------------------------------
  --------------------------------------------------------------------------------------------------------
 
-
-
+if not exists (SELECT * FROM sys.tables WHERE name = 'linea_de_producto' AND schema_id = SCHEMA_ID('catalogo'))
+begin
 create table catalogo.linea_de_producto
 	(
 		id			int identity(1,1) primary key,
@@ -173,8 +192,14 @@ create table catalogo.linea_de_producto
 		categoria	varchar(50) not null,
 		activo		bit default 1,-- para el borrado logico
 	);
+end
+
+
+
 GO
 
+if not exists (SELECT * FROM sys.tables WHERE name = 'producto' AND schema_id = SCHEMA_ID('catalogo'))
+begin
 create table catalogo.producto   
 	(
 		id				int identity(1,1),
@@ -186,6 +211,26 @@ create table catalogo.producto
 		constraint fk_Linea_de_producto foreign key (id_linea) 
 			references catalogo.linea_de_producto(id)
 	);
+end
+
+go
+
+if not exists (SELECT * FROM sys.tables WHERE name = 'producto ' AND schema_id = SCHEMA_ID('catalogo'))
+begin
+create table catalogo.producto   
+	(
+		id				int identity(1,1),
+		nombre			nvarchar(200) not null,
+		Precio			DECIMAL(10, 2) check( Precio>0 ),
+		id_linea		int,
+		activo			bit default 1,
+		constraint pk_producto primary key clustered (id),
+		constraint fk_Linea_de_producto foreign key (id_linea) 
+			references catalogo.linea_de_producto(id)
+	);
+end
+
+
 go
 
 
@@ -193,7 +238,8 @@ go
  --------------------------------------------------------------------------------------------------------
 -----------------------------------------  ESQUEMA VENTAS ---------------------------------------------
  --------------------------------------------------------------------------------------------------------
-
+if not exists (SELECT * FROM sys.tables WHERE name = 'mediosDePago' AND schema_id = SCHEMA_ID('ventas'))
+begin
 create table ventas.mediosDePago
 	(
 		id		int identity(1,1),
@@ -201,8 +247,12 @@ create table ventas.mediosDePago
 		activo	bit default 1,
 		constraint pk_medios primary key clustered (id)
 	);
+end
+
 go
 
+if not exists (SELECT * FROM sys.tables WHERE name = 'factura' AND schema_id = SCHEMA_ID('ventas'))
+begin
 create table ventas.factura
 	(
 		id				int identity(1,1),
@@ -215,13 +265,20 @@ create table ventas.factura
 		estadoDePago    char(17) default 'pagada',
 		total			decimal(12,2),
 		totalConIva		decimal(12,2),
+		activo			bit default 1,
 		CONSTRAINT pk_Fact PRIMARY KEY CLUSTERED (id),
 		constraint fk_medioDePago foreign key (idMedio_de_pago) references ventas.mediosDePago(id),
 		constraint chk_nroFactura 
 			check (nroFactura LIKE '[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]')
 	);
+end
+
+
+
 go
 
+if not exists (SELECT * FROM sys.tables WHERE name = 'detalleVenta' AND schema_id = SCHEMA_ID('ventas'))
+begin
 create table ventas.detalleVenta
 	(
 		id				int identity(1,1),
@@ -230,26 +287,36 @@ create table ventas.detalleVenta
 		precio			decimal(10,2) check(precio>0) ,
 		cant			smallint not null check(cant>0),
 		subtotal		decimal(12,2),
+		activo			bit default 1,
 		constraint pk_detalleVenta primary key clustered (id),
 		constraint fk_factura1 foreign key (idFactura) references ventas.factura(id),
 		constraint fk_producto2 foreign key (idProducto) references catalogo.producto(id)
 	);
+end
+
+
 go
 
-
+if not exists (SELECT * FROM sys.tables WHERE name = 'cliente' AND schema_id = SCHEMA_ID('ventas'))
+begin
 CREATE TABLE ventas.cliente 
 	(
 		id INT IDENTITY(1,1),
 		cuil VARCHAR(20),
 		tipo_cliente VARCHAR(10),
 		genero VARCHAR(10),
+		usuario VARCHAR(50) default null,
 		constraint pk_cliente primary key clustered (id),
 		CONSTRAINT chk_cuil 
 			CHECK (cuil LIKE '[0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9]')
 	);
+end
+
+
 go
 
-
+if not exists (SELECT * FROM sys.tables WHERE name = 'registro_de_ventas' AND schema_id = SCHEMA_ID('ventas'))
+begin
 create table ventas.registro_de_ventas
 	(
 		id				int identity(1,1),
@@ -263,10 +330,13 @@ create table ventas.registro_de_ventas
 		constraint fk_factura2 foreign key (idFactura) references ventas.factura(id),
 		constraint fk_cliente foreign key (idCliente) references ventas.cliente(id)
 	);
+end
+
+
 go
 
-
-
+if not exists (SELECT * FROM sys.tables WHERE name = 'notasDeCredito ' AND schema_id = SCHEMA_ID('ventas'))
+begin
 CREATE TABLE ventas.notasDeCredito 
 	(
 		id				INT IDENTITY(1,1),
@@ -278,6 +348,10 @@ CREATE TABLE ventas.notasDeCredito
 		CONSTRAINT fk_detalleVenta FOREIGN KEY (idDetalleVenta) REFERENCES ventas.detalleVenta(id),
 		CONSTRAINT chk_razon CHECK (razon IN ('devPago', 'devProd'))
 	);
+end
+
+
+
 GO
 
 /*
@@ -290,16 +364,19 @@ la información de multiples productos como un parámetro al sp que inserta nuevas
 */
 
 --Lo usamos al insertar una venta
-
+IF NOT EXISTS ( SELECT * FROM sys.types WHERE name = 'TipoProductosDetalle' AND schema_id = SCHEMA_ID('ventas'))
+begin
 CREATE TYPE ventas.TipoProductosDetalle AS TABLE (
 		idProducto INT,
 		cantidad SMALLINT
 );
+end
 GO
 
 
 --- por si viene una factura no coincidente con algun producto del catalogo (si, somos paranoicos...y que!!!)
-
+if not exists (SELECT * FROM sys.tables WHERE name = 'ventasProductosNoRegistrados' AND schema_id = SCHEMA_ID('ventas'))
+begin
 create table ventas.ventasProductosNoRegistrados
 	(
 		factura			varchar(20),
@@ -316,7 +393,18 @@ create table ventas.ventasProductosNoRegistrados
 		idEmpleado		int,
 		idPago			varchar(30)
     );
+end
+
+
 go
+
+----esta tabla ayuda porque despues de cambiar los caracteres  raros en nombre de producto
+----no coincidieron productos que venian con esos caracteres raros en sus nombres en ventas registradas
+----estos tipos de problema por futuros nombres de producto que se escriban incorrectamente 
+---- son los que justifican que se deje esta tabla como auxiliar de registros extraños entre otras anormalidades posibles
+
+
+
 
 
 
@@ -324,13 +412,32 @@ go
 -----------------------------------------  CREACIÓN DE ÍNDICES ---------------------------------------------
  --------------------------------------------------------------------------------------------------------
 
-create nonclustered index ix_nombre on catalogo.producto(nombre)
-go
-create nonclustered index ix_ciudad on supermercado.sucursal(ciudad)
-go
-create nonclustered index ix_linea on catalogo.linea_de_producto(nombre)
-go
-create nonclustered index ix_factura on ventas.factura(nroFactura)
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'ix_nombre' AND object_id = OBJECT_ID('catalogo.producto'))
+begin
+	create nonclustered index ix_nombre on catalogo.producto(nombre)
+end
 go
 
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'ix_ciudad' AND object_id = OBJECT_ID('supermercado.sucursal'))
+begin
+	create nonclustered index ix_ciudad on supermercado.sucursal(ciudad) include (localidad)
+end
 
+go
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'ix_linea' AND object_id = OBJECT_ID('catalogo.linea_de_producto'))
+begin
+	create nonclustered index ix_linea on catalogo.linea_de_producto(nombre) include (categoria)
+end
+
+go
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'ix_factura' AND object_id = OBJECT_ID('ventas.factura'))
+begin
+	create nonclustered index ix_factura on ventas.factura(nroFactura)
+end
+
+go
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'ix_clientes' AND object_id = OBJECT_ID('ventas.cliente'))
+begin
+	create nonclustered index ix_clientes on ventas.cliente(cuil)
+end
+go

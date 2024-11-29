@@ -29,46 +29,58 @@
           <FullPath>00- creacion de base - esquemas - tablas - indices.sql</FullPath>
         </FileNode>
         <FileNode Name="01- creacionSP_ABM.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-745ELB5:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-745ELB5</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>01- creacionSP_ABM.sql</FullPath>
         </FileNode>
         <FileNode Name="02- creacionSPdeImportacionDeMaestros.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-745ELB5:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-745ELB5</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>02- creacionSPdeImportacionDeMaestros.sql</FullPath>
         </FileNode>
         <FileNode Name="03- ejecucionSPYDirrecionArchivos.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-745ELB5:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-745ELB5</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>03- ejecucionSPYDirrecionArchivos.sql</FullPath>
         </FileNode>
         <FileNode Name="04- creacionSPyViewsParaSupervisoresYGerentes.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-745ELB5:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-745ELB5</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>04- creacionSPyViewsParaSupervisoresYGerentes.sql</FullPath>
         </FileNode>
         <FileNode Name="05- creacionDeLOGINsUSERsYRoles.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-745ELB5:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-745ELB5</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>05- creacionDeLOGINsUSERsYRoles.sql</FullPath>
         </FileNode>
         <FileNode Name="06-backups.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-745ELB5:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-745ELB5</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>06-backups.sql</FullPath>
         </FileNode>
-        <FileNode Name="07-Testing.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+        <FileNode Name="07-Testing - entrega 3 - ABM.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-745ELB5:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-745ELB5</AssociatedConnSrvName>
           <AssociatedConnUserName />
-          <FullPath>07-Testing.sql</FullPath>
+          <FullPath>07-Testing - entrega 3 - ABM.sql</FullPath>
+        </FileNode>
+        <FileNode Name="08-Testing - entrega 4 - importacion.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-745ELB5:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-745ELB5</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>08-Testing - entrega 4 - importacion.sql</FullPath>
+        </FileNode>
+        <FileNode Name="09-Testing - entrega 5 - reportes y seguridad.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:DESKTOP-745ELB5:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>DESKTOP-745ELB5</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>09-Testing - entrega 5 - reportes y seguridad.sql</FullPath>
         </FileNode>
       </Items>
     </LogicalFolder>

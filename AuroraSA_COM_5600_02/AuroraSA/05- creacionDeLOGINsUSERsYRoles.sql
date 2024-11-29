@@ -321,38 +321,29 @@ go
 CREATE ROLE cajero AUTHORIZATION DBA;
 go
 
----dar acesso a la tabla tipoProductosDetalle al cajero
+
 GRANT EXECUTE ON TYPE::ventas.TipoProductosDetalle TO cajero;
 GO
 
 GRANT SELECT ON catalogo.vista_Producto_Resumen  TO cajero;
 go
 
-GRANT SELECT ON ventas.vista_de_registros_de_ventas TO cajero;
-go
---SELECT * FROM ventas.vista_de_registros_de_ventas;
-
 GRANT EXECUTE ON ventas.generar_venta_con_factura TO cajero;
 go
 
+GRANT EXECUTE ON ventas.mostrar_ventas_por_cajero TO cajero;
+go
 
+GRANT EXECUTE ON ventas.borrado_logico_factura TO cajero;
+go
+
+GRANT EXECUTE ON ventas.borrado_logico_detalle_de_venta TO cajero;
+go
 
 
 
 CREATE ROLE supervisor AUTHORIZATION DBA;
 go
-
-
-GRANT SELECT ON ventas.vista_de_registros_de_ventas TO supervisor;
-go
-
--- select * from ventas.notasDeCredito
-
--- select * from catalogo.producto
-
---EXEC ventas.insertarNotaDeCredito @idFactura = 1, @idProducto = 5495, @razon = 'devProd';--- 'devPago', 'devProd'
---go
-
 
 GRANT EXECUTE ON ventas.insertarNotaDeCredito TO supervisor;
 go
@@ -360,6 +351,8 @@ go
 GRANT SELECT ON ventas.vista_de_notas_de_credito TO supervisor;
 go
 
+GRANT EXECUTE ON ventas.mostrar_factura_segun_supervisor TO supervisor;
+go
 
 
 
@@ -371,113 +364,41 @@ go
 CREATE ROLE gerente AUTHORIZATION DBA;
 go
 
-
--- select * from ventas.factura
-
-
 GRANT EXECUTE ON ventas.TotalFacturadoPorDiaSemana TO gerente;
 go
-/*
-EXEC ventas.TotalFacturadoPorDiaSemana @mes = 1, @anio = 2019;
-go
-*/
-
-
 
 GRANT EXECUTE ON ventas.reporte_trimestral_facturacion TO gerente;
 go
- /*
-EXEC ventas.reporte_trimestral_facturacion @Trimestre = 1, @Anio = 2019;
-go
-
-*/
-
-
 
 GRANT EXECUTE ON ventas.reporte_producto_vendido_rango_fecha TO gerente;
 go
-/*
-EXEC ventas.reporte_producto_vendido_rango_fecha @FechaIni = '2019-02-15', @FechaFinal = '2019-02-20';
-go
-*/
-
-
-
-
 
 GRANT EXECUTE ON ventas.reporte_producto_vendido_rango_fecha_sucursal TO gerente;
 go
-/*
-EXEC ventas.reporte_producto_vendido_rango_fecha_sucursal @FechaIni = '2019-02-15', @FechaFinal = '2019-02-20';
-go
-*/
-
-
-
-
-
 
 GRANT EXECUTE ON ventas.reporte_productos_mas_vendidos_por_semana TO gerente;
 go
-/*
-exec ventas.reporte_productos_mas_vendidos_por_semana 1, 2019;
-go
-*/
-
-
 
 GRANT EXECUTE ON ventas.reporte_productos_menos_vendidos_mes TO gerente;
 go
-/*
-exec ventas.reporte_productos_menos_vendidos_mes 1, 2019;
-go
-
-*/
-
-
-
 
 GRANT EXECUTE ON ventas.reporte_total_acumulado_ventas TO gerente;
 go
-/*
-exec ventas.reporte_total_acumulado_ventas '2019-02-15', 2;
-go
-*/
-
-
-
-
 
 GRANT EXECUTE ON supermercado.mostrarEmpleadosDesencriptados TO gerente;
 go
-/*
-EXEC supermercado.mostrarEmpleadosDesencriptados 
-    @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.', 
-    @idSucursalGerente = 1, 
-    @idEmpleado = 257034;
+
+GRANT EXECUTE ON ventas.generar_reporte_ventas_xml TO gerente;
 go
-
-
-*/
-
-
 
 GRANT SELECT ON ventas.reporte_de_ventas TO gerente;
 go
-	/*
-SELECT * FROM ventas.reporte_de_ventas
-go
-*/
 
 GRANT SELECT ON ventas.vista_de_notas_de_credito TO gerente;
 go
 
-
-
 GRANT SELECT ON ventas.vista_de_registros_de_ventas TO gerente;
 go
-
-
 
 
 
@@ -514,8 +435,6 @@ exec supermercado.insertarUsuario 257033, gerente2
 go
 exec supermercado.insertarUsuario 257034, gerente3
 go
-
---select * from supermercado.empleado
 
 
 --Asignamos los usuarios a los roles

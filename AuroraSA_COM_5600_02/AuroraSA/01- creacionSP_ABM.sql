@@ -87,7 +87,8 @@ BEGIN
     END TRY
     BEGIN CATCH
         -- Si ocurre un error, devolver mensaje y detener la ejecución
-        print 'se ingresaron mal los datos';
+        DECLARE @ErrorMessage NVARCHAR(1000) = ERROR_MESSAGE();
+		RAISERROR(  @ErrorMessage, 16 ,1);
         RETURN;
     END CATCH
 END;
@@ -149,7 +150,8 @@ BEGIN
 				VALUES (@idComercio, @ciudad, @localidad, @direccion, @horario, @telefono);
 		END TRY
 		BEGIN CATCH
-			print 'se ingresaron mal los datos';
+			DECLARE @ErrorMessage NVARCHAR(1000) = ERROR_MESSAGE();
+			RAISERROR( @ErrorMessage, 16 ,1 );
 			RETURN;
 		END CATCH
 
@@ -292,14 +294,25 @@ BEGIN
     ELSE
     BEGIN
         -- Si no existe, insertar el nuevo producto
-        INSERT INTO catalogo.producto (nombre, Precio, id_linea)
-        VALUES (@nombre, @Precio, @id_linea);
+        
+		BEGIN TRY
+
+		INSERT INTO catalogo.producto (nombre, Precio, id_linea)
+		 VALUES (@nombre, @Precio, @id_linea);
 
         -- Registro de inserción
         DECLARE @mensajeInsercion VARCHAR(1000);
         SET @mensajeInsercion = FORMATMESSAGE('Nuevo producto insertado con nombre %s, precio %s y línea %d', @nombre, CONVERT(VARCHAR(20), @Precio, 1), @id_linea);
         
         EXEC registros.insertarLog 'insertarProducto', @mensajeInsercion;
+
+
+		END TRY
+		BEGIN CATCH
+			DECLARE @ErrorMessage NVARCHAR(1000) = ERROR_MESSAGE();
+			RAISERROR(  @ErrorMessage, 16 ,1);
+		END CATCH
+
     END
 END;
 GO
@@ -328,7 +341,8 @@ BEGIN
 			INSERT INTO ventas.mediosDePago (nombre) VALUES (@nombre);
 		END TRY
 		BEGIN CATCH
-			print 'se ingresaron mal los datos';
+			DECLARE @ErrorMessage NVARCHAR(1000) = ERROR_MESSAGE();
+			RAISERROR(  @ErrorMessage, 16 ,1);
 			RETURN;
 		END CATCH
 
@@ -367,7 +381,8 @@ BEGIN
 		    VALUES (@nombre, @categoria);
 		END TRY
 		BEGIN CATCH
-			print 'se ingresaron mal los datos';
+			DECLARE @ErrorMessage NVARCHAR(1000) = ERROR_MESSAGE();
+			RAISERROR(  @ErrorMessage, 16 ,1);
 			RETURN;
 		END CATCH
 
@@ -418,7 +433,8 @@ BEGIN
 			VALUES (@cuil, @tipoCliente, @genero);
 		END TRY
 		BEGIN CATCH
-			print 'hubo un error';
+			DECLARE @ErrorMessage NVARCHAR(1000) = ERROR_MESSAGE();
+			RAISERROR(  @ErrorMessage, 16 ,1);
 			RETURN;
 		END CATCH
 
@@ -483,7 +499,8 @@ BEGIN
 		VALUES (@nroFactura, @tipoFactura, @fecha, @hora, @idMedioDePago, @idPago, 'pagada');
 	END TRY
 	BEGIN CATCH
-        print 'error de numero de factura por formar XXX-XX-XXXX';
+        DECLARE @ErrorMessage NVARCHAR(1000) = ERROR_MESSAGE();
+		RAISERROR(  @ErrorMessage, 16 ,1);
         RETURN;
 	END CATCH
 
@@ -746,7 +763,8 @@ BEGIN
 			WHERE id = @idSucursal;
 		END TRY
 		BEGIN CATCH
-			print 'hubo un error - ingreso de datos erroneos por telefono';
+			DECLARE @ErrorMessage NVARCHAR(1000) = ERROR_MESSAGE();
+			RAISERROR(  @ErrorMessage, 16 ,1);
 			RETURN;
 		END CATCH
 
@@ -899,7 +917,8 @@ BEGIN
 
 	END TRY
 	BEGIN CATCH
-        print 'se ingresaron mal los datos- el precio no puede ser 0';
+        DECLARE @ErrorMessage NVARCHAR(1000) = ERROR_MESSAGE();
+		RAISERROR(  @ErrorMessage, 16 ,1);
         RETURN;
 	END	CATCH
 
@@ -1051,6 +1070,96 @@ BEGIN
     END
 END;
 GO
+
+----------------------------------------------------------------------------------------------------------
+--PROCEDURE PARA HACER BORRADO LOGICO POR EL ID DE FACTURA
+----------------------------------------------------------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE ventas.borrado_logico_factura
+    @id INT                           -- ID del factura por identity
+AS
+BEGIN
+	IF EXISTS (SELECT 1 FROM ventas.factura f WHERE activo = 0 AND id = @id)
+	BEGIN
+		RAISERROR('factura ya borrada',16,1);
+		RETURN;
+	END
+
+    declare @modulo NVARCHAR(50) = 'factura';
+    UPDATE ventas.factura
+    SET activo = 0
+    WHERE id = @id;
+
+   ---se va a borrar todas los detalles de venta
+	UPDATE ventas.detalleVenta
+	set activo = 0
+	where idFactura=@id;
+
+    IF @@ROWCOUNT > 0
+    BEGIN
+        DECLARE @texto NVARCHAR(255);
+        SET @texto = CONCAT('Borrado lógico del factura con ID: ', @id);
+        EXEC registros.insertarLog @texto, @modulo;
+    END
+	 
+END;
+GO
+
+
+----------------------------------------------------------------------------------------------------------
+--PROCEDURE PARA HACER BORRADO LOGICO POR EL ID DETALLE DE VENTA
+----------------------------------------------------------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE ventas.borrado_logico_detalle_de_venta
+    @id INT                           -- ID del factura por identity
+AS
+BEGIN
+	--PREGUNTAR SI ESTA EN 0 , SI ESTA EN 0 RETURN 
+	IF EXISTS (SELECT 1 FROM ventas.detalleVenta WHERE activo = 0 AND id=@id)
+	BEGIN
+		RAISERROR('detalle de venta ya borrado',16,1);
+		RETURN;
+	END
+
+    declare @modulo NVARCHAR(50) = 'detalle de venta';
+    UPDATE ventas.detalleVenta
+    SET activo = 0
+    WHERE id = @id;
+
+	--se obtiene la factura -> y verificar si todas los detalles de venta en 0 , entonces borrar factura
+	DECLARE @idFactura int;
+	SET @idFactura = (SELECT d.idFactura FROM ventas.detalleVenta  d where d.id=@id );
+
+	UPDATE ventas.factura
+	SET total = total - (select subtotal FROM ventas.detalleVenta where id=@id),
+		totalConIva = total * 1.21
+	WHERE id = @idFactura;
+
+	IF (SELECT COUNT(*) FROM ventas.detalleVenta WHERE activo = 1 AND idFactura = @idFactura) = 0
+	BEGIN
+		UPDATE ventas.factura
+		SET activo = 0
+		WHERE id = @idFactura;
+		
+		DECLARE @textoFactura NVARCHAR(255);
+		SET @textoFactura = CONCAT('Borrado lógico del factura con ID: ', @id);
+        EXEC registros.insertarLog @textoFactura, @modulo;
+	END
+
+	IF @@ROWCOUNT > 0
+    BEGIN
+        DECLARE @texto NVARCHAR(255);
+        SET @texto = CONCAT('Borrado lógico de detalle de venta con ID: ', @id);
+
+        -- Llamada al procedimiento para registrar el borrado
+        EXEC registros.insertarLog @texto, @modulo;
+    END
+
+END;
+GO
+
+
+
 ----------------------------------------------------------------------------------------------------------
 -- FIN
 ----------------------------------------------------------------------------------------------------------

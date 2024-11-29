@@ -47,6 +47,20 @@
  *                                                            *
  *************************************************************/
 
+/*
+--		para que pueda importar archivos xlsx y csv      --
+
+--	Mostrar opciones avanzadas
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+--	Habilitar consultas distribuidas ad-hoc
+EXEC sp_configure 'Ad Hoc Distributed Queries', 1;
+RECONFIGURE;
+--	Configurar propiedades del proveedor OLE DB
+EXEC sp_MSset_oledb_prop 'Microsoft.ACE.OLEDB.12.0', N'AllowInProcess', 1;
+EXEC sp_MSset_oledb_prop 'Microsoft.ACE.OLEDB.12.0', N'DynamicParameters', 1;
+*/
+
 
 USE COM5600G02
 GO

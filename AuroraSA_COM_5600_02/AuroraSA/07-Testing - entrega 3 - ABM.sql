@@ -8,7 +8,7 @@
  *      - Karen Anabella Bursa                              *
  *      - Jonathan Ivan Aranda Robles                       *
  *                                                          *
- *   NRO. DE ENTREGA: 5                                     *
+ *   NRO. DE ENTREGA: 3                                     *
  *   FECHA DE ENTREGA: 15/11/2024                           *
  *                                                          *
  *   TESTING                                                *
@@ -28,18 +28,11 @@
  *   empleados, líneas de producto y catálogos desde los    *
  *   archivos.                                              *
  *                                                          *
- *   Verificamos los reportes.                              *
- *   Verificamos la correcta encriptación de empleados.     *
- *   Validamos los roles y permisos.                        *
- *                                                          *
  ************************************************************/
 
-
---------------------------------------------------------------------------------------------------------------
---TEST STORES DE CREACIÓN  , entrega 3
---------------------------------------------------------------------------------------------------------------
-
-
+ ---------------------------------------------------------------------
+--TESTING DE ABM SI SE IMPORTO LOS ARCHIVOS MAESTROS (03 - ejecucionSPdelImportacionDeMaestro.sql)
+---------------------------------------------------------------------
 
 ---------------------------------------------------------------------
 --TESTS RELACIONADOS CON LA CREACIÓN DE LA BITÁCORA
@@ -92,11 +85,10 @@ EXEC registros.insertarLog @modulo = 'Seguridad', @texto = 'Al venir al mundo fu
 
 
 
-
-
 ---------------------------------------------------------------------
 --TEST INSERCIÓN COMERCIO
 ---------------------------------------------------------------------
+use COM5600G02;
 ----no insertar duplicado
 EXEC supermercado.insertarComercio 
     @cuit = '20-12345678-9',
@@ -104,10 +96,7 @@ EXEC supermercado.insertarComercio
     @razon_social = 'Aurora S.A.',
     @email = 'contacto@aurora.com.ar';
 go
-
-select * from supermercado.Comercio;
-
-----probando un cuit de correspondiente 
+----probando el check del cuit 
 EXEC supermercado.insertarComercio 
     @cuit = '20-123456-8-4',
     @nombre_comercio = 'Aurora',
@@ -121,9 +110,8 @@ go
 ---------------------------------------------------------------------
 --TEST INSERCIÓN SUCURSAL
 ---------------------------------------------------------------------
-
+use COM5600G02;
 ------------------ se debe insertar por unica vez, y no debe poder duplicarse
-
 EXEC supermercado.insertarSucursal 'hong king', 
 	'Gonzales Catan',
 	'Juan Manuel de Rosas 14.457, Ruta 3 km 29 (1759) Gonzalez Catán' ,
@@ -131,39 +119,31 @@ EXEC supermercado.insertarSucursal 'hong king',
 	'123-484-4132';
 GO
 select * from supermercado.sucursal;
+GO
 ------------------actualizacion de sucursal
 EXEC supermercado.modificarDatosSucursal 
-	2,'horario 9 a.m- 10p.m','174-8-3585';
+	4,'horario 9 a.m- 10p.m','174-518-3585';
 GO
 select * from supermercado.sucursal;
-
-go
+GO
 -------------------borrado logico
 exec supermercado.borrado_logico_sucursal 4;
+GO
+select * from supermercado.sucursal;
+GO
 
 
-
-
-
----------------
-
-use COM5600G02;
 ---------------------------------------------------------------------
 --TEST INSERCIÓN EMPLEADO
 ---------------------------------------------------------------------
-
-select * from supermercado.empleado;
-
-EXEC supermercado.mostrarEmpleadosDesencriptados 
-    @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.';
-
-EXEC supermercado.mostrarEmpleadosDesencriptadosDelGerente
+use COM5600G02;
+---muestra los empleado de un gerente en particular
+EXEC supermercado.mostrarEmpleadosDesencriptadosDelGerente		
 	@FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.',
     @idSucursalGerente = 2,
     @idEmpleado = 257032;
-
-------------------------------
-
+go
+---- ingreso de nuevo empleado
 EXEC supermercado.insertarEmpleado
     @legajo = 258490,                     
     @nombre = 'Juan',                  
@@ -176,40 +156,40 @@ EXEC supermercado.insertarEmpleado
     @idSucursal = 2,                    
     @turno = 'TM',                  
     @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.';    
-
+go
+EXEC supermercado.mostrarEmpleadosDesencriptados 
+    @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.';
+go
 
 ---------------------borrado logico 
-exec supermercado.borrado_logico_empleado 16;
-
-
+exec supermercado.borrado_logico_empleado @legajo=257022;
+go
+select * from supermercado.empleado;
+go
 
 
 ---------------------------------------------------------------------
 --TEST INSERCIÓN LINEA DE PRODUCTO
 ---------------------------------------------------------------------
-/*
-CASO DE TESTING : Testeamos que no se repita la categoría de la linea del producto
-VARIABLES DE ENTRADA:
-    - @nombre: 'Almacen'
-    - @categoría: 'aceite_vinagre_y_sal'
-RESULTADO ESPERADO: Que no nos deje insertar una categoría repetda
-*/
-EXEC catalogo.insertarLinea_de_producto @nombre = 'Almacen',@categoría = 'aceite_vinagre_y_sal';
+use COM5600G02;
+---insercion de una nueva categoria
+EXEC catalogo.insertarLinea_de_producto @nombre = 'Almacen',@categoría = 'enlatados';
+GO
 select * from catalogo.linea_de_producto order by id desc;
+GO
+---no admite productos repetido
+EXEC catalogo.insertarLinea_de_producto @nombre = 'Almacen',@categoría = 'aceite_vinagre_y_sal';
+GO
 select * from catalogo.linea_de_producto where categoria =  'aceite_vinagre_y_sal';
-
-
-
+GO
 -----borrado logico
 exec catalogo.borrado_logico_lineaDeProducto 'Almacen';
-
-
+GO
+select * from catalogo.linea_de_producto order by id desc;
+GO
 --- no puede insertar null en la linea de producto.
 EXEC catalogo.insertarLinea_de_producto null,null;
-
-
-
-
+GO
 
 
 ---------------------------------------------------------------------
@@ -223,7 +203,6 @@ RESULTADO ESPERADO: Que no nos deje insertar un cliente repetido
 
 declare @idCliente int;
 declare @clienteExistente BIT;
-
 EXEC ventas.insertar_cliente 
     @cuil = '20-12345678-9', 
     @tipoCliente = 'Particular', 
@@ -236,7 +215,7 @@ IF @clienteExistente = 1
 	
 SELECT * FROM ventas.cliente
 
------se ingreso mal los datos del cuil
+-----se ingreso mal los datos del cuil, debe salir error por check de cuil
 declare @idCliente int;
 declare @clienteExistente BIT;
 EXEC ventas.insertar_cliente 
@@ -258,21 +237,28 @@ EXEC ventas.insertar_cliente
 
 ---insercion  (nombreProducto, precio decimal, id  lal linea )
 exec catalogo.insertarProducto 'Samsumg Galaxy A03',150.00,150;
+GO
 select * from catalogo.producto order by id desc ;
+GO
 ---insersion pero no existe linea de producto
 exec catalogo.insertarProducto 'Samsumg Galaxy A04',160.00,160;
+GO
 ---no admite duplicados
 exec catalogo.insertarProducto 'Samsumg Galaxy A03',150.00,150;
+GO
 -- Modificar un producto existente , modificar precio
 exec catalogo.ActualizarPrecioProducto 6524,200.00;
+GO
 select * from catalogo.producto order by id desc;
-
+GO
 -- borrado logico 
-exec catalogo.borrado_logico_producto 6500;
-
+exec catalogo.borrado_logico_producto @id = 6500;
+GO
+select * from catalogo.producto order by id desc ;
+GO
 --- no se puede poner un precio cero o negativo , resultado esperado : error por el check de precio
-exec catalogo.insertarProducto 'producto generico',0,1;
-
+exec catalogo.insertarProducto @nombre = 'producto generico', @Precio = 0, @id_linea = 1;
+GO
 
 
 
@@ -283,16 +269,20 @@ exec catalogo.insertarProducto 'producto generico',0,1;
 
 ---insercion 
 EXEC ventas.insertarMedioDePago 'Debit Card';
-select * from ventas.mediosDePago order by id desc ;
+GO
+select * from ventas.mediosDePago;
+GO
 ---no admite duplicados
 EXEC ventas.insertarMedioDePago 'Cash';
-
+GO
 ---borrado (lógico)
 EXEC ventas.borrado_logico_mediosDePago @id = 2;
-
+GO
+select * from ventas.mediosDePago;
+GO
 ---no se registra medio de pago, por que recibe un null;
 EXEC ventas.insertarMedioDePago null;
-
+GO
 
 
 
@@ -319,17 +309,19 @@ VALUES
 EXEC ventas.generar_venta_con_factura
     @nroFactura = '750-67-8415',    -- Número de factura de ejemplo
     @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
-    @fecha = '1/5/2019',          -- Fecha de la venta
+    @fecha = '1/5/2019',			-- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
     @idMedioDePago = 1,             -- ID del medio de pago 
     @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
-    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
+    @idEmpleado = 257020,           -- ID del empleado (debe ser un ID válido de la tabla empleados)
     @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
-    @tipoCliente = 'Normal',       -- Tipo de cliente 
-    @genero = 'Male',          -- Género del cliente
+    @tipoCliente = 'Normal',		-- Tipo de cliente 
+    @genero = 'Male',				-- Género del cliente
     @cuil = '20-12345678-9',        -- CUIL del cliente 
     @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
 go
+--borrado logico 
+EXEC ventas.borrado_logico_factura 3;
 
 
 
@@ -379,15 +371,18 @@ EXEC ventas.generar_venta_con_factura
     @cuil = '20-12345678-9',        
     @productosDetalle = @productosDetalle; 
 go
-
 select * from ventas.vista_de_registros_de_ventas where ID_Factura='456-67-8428';
+GO
 select * from ventas.vista_de_registros_de_ventas;
+GO
 
-
-
-
-
-
+---------------------------------------------------------------------
+--TEST BORRADO DE DETALLE DE VENTA
+---------------------------------------------------------------------
+EXEC ventas.borrado_logico_detalle_de_venta @id = 1;
+GO
+select * from ventas.detalleVenta;
+GO
 
 
 ---------------------------------------------------------------------
@@ -397,65 +392,23 @@ select * from ventas.vista_de_registros_de_ventas;
 select * from ventas.detalleVenta order by id desc;
 select * from ventas.factura order by id desc;
 ------- test se debe insertar correctamente la nota de credito en la tabla y no debe duplicarse
-exec ventas.insertarNotaDeCredito 45,5637,'devProd';
+exec ventas.insertarNotaDeCredito @idFactura = 45, @idProducto = 5637, @razon = 'devProd';
+go
 select * from ventas.notasDeCredito;
+go
+------- test de devolucion de pago
+exec ventas.insertarNotaDeCredito @idFactura = 955, @idProducto = 2024, @razon = 'devPago';
+go
+select * from ventas.notasDeCredito;
+go
 ------- se verfica que el idFactura sea correcto ,dando una factura incorrecta
-exec ventas.insertarNotaDeCredito 2201,6529,'devProd';
+exec ventas.insertarNotaDeCredito @idFactura = 2201, @idProducto = 6529, @razon = 'devProd';
+go
 ------- se verfica que el producto sea correcto a pesar que el idFactura sea correcto
-exec ventas.insertarNotaDeCredito 1000,2015,'devProd';
-
-
-
----------------------------------------------------------------------
---TEST DE INSERCION Y ACTUALIZAR DE ARCHIVOS  , entrega 4
----------------------------------------------------------------------
--- se espera que que importe los clientes 
-EXEC ventas.importar_clientes 'C:\importar\DatosClientes.csv';
-go
-select * from ventas.cliente
-go
-select * from registros.bitácora
+exec ventas.insertarNotaDeCredito @idFactura = 1000,  @idProducto = 2015, @razon = 'devProd';
 go
 
---actualizacion y ingreso de nuevas sucursales por archivo
-/*
-observar que en la primera ejecucion de este SP se afectaran TODAS LAS FILAS 
-debido a que ademas de agregarse un registro se actualizaran los telefonos
-*/
-EXEC supermercado.importarSucursal 'C:\importar\nuevosDatos\Informacion_complementaria_2.xlsx';
-GO
-select * from supermercado.sucursal;
-GO
---actualizacion y ingreso de nuevos empleados por archivo
-EXEC supermercado.importarEmpleados 'C:\importar\nuevosDatos\Informacion_complementaria_2.xlsx', 'La vida es como la RAM, todo es temporal y nada se queda.';
-GO
-select * from supermercado.empleado;
-GO
-EXEC supermercado.mostrarEmpleadosDesencriptados 
-    @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.'
-GO
---actualizacion y ingreso de nuevas lineas de producto por archivo
-EXEC catalogo.importarLinea_de_producto 'C:\importar\nuevosDatos\Informacion_complementaria_2.xlsx';
-GO
-select * from catalogo.linea_de_producto order by id desc;
-GO
---actualizacion y ingreso de nuevos productos catalogo por archivo ;
-exec catalogo.importarCatalogo 'C:\importar\nuevosDatos\catalogo_2.csv';
-GO
-select * from catalogo.producto order by id desc;
-GO
---actualizacion y ingreso de nuevos productos electronicos por archivo ;
-exec catalogo.importarAccesorios 'C:\importar\nuevosDatos\Electronic accessories_2.xlsx';
-GO
-select * from catalogo.producto order by id desc;
-GO
-EXEC ventas.importarVentas_registradas 'C:\importar\nuevosDatos\Ventas_registradas_2.csv';
-go
 
-select * from ventas.factura order by id desc;
-select * from ventas.detalleVenta order by id desc;
-select * from catalogo.producto order by id desc;
-select * from ventas.vista_de_registros_de_ventas;
 
 
 
@@ -468,245 +421,68 @@ select * from ventas.vista_de_registros_de_ventas;
 
 
 ---------------------------------------------------------------------
---TEST REPORTES  , entrega 4
----------------------------------------------------------------------
------------------
-EXEC ventas.TotalFacturadoPorDiaSemana @mes = 1, @anio = 2019;
-go
------------------
-EXEC ventas.reporte_trimestral_facturacion @Trimestre = 1, @Anio = 2019;
-go
------------------
-EXEC ventas.reporte_producto_vendido_rango_fecha @FechaIni = '2019-02-15', @FechaFinal = '2019-02-20';
-go
------------------
-EXEC ventas.reporte_producto_vendido_rango_fecha_sucursal @FechaIni = '2019-02-15', @FechaFinal = '2019-02-20';
-go
------------------
-exec ventas.reporte_productos_mas_vendidos_por_semana 1, 2019;
-go
------------------
-exec ventas.reporte_productos_menos_vendidos_mes 1, 2019;
-go
------------------
-exec ventas.reporte_total_acumulado_ventas '2019-02-15', 2;
-go
-
-
-
----------------------------------------------------------------------
------------------Testeo de ultimo producto vendido
+--TESTING DE ABM SI NO SE HA IMPORTADO LOS ARCHIVOS MAESTROS (03 - ejecucionSPdelImportacionDeMaestro.sql)
 ---------------------------------------------------------------------
 
----hacer una venta en el dia de hoy, y verficiar que este dentro del rango de fecha entre hoy y ayer
----primero me fijo los productos que hay
-select * from catalogo.producto order by id desc;   ---!!!!!OJO PRIMERO VER EL PRODUCTO Y LUEGO PONER LOS DATOS
+-------------------- sin importar datos ,
+-- insercion Comercio
+EXEC supermercado.insertarComercio 
+    @cuit = '20-12345678-9',
+    @nombre_comercio = 'Aurora',
+    @razon_social = 'Aurora S.A.',
+    @email = 'contacto@aurora.com.ar';
+go
 
--- Insertamos productos de prueba en la tabla de tipo
+---crear una sucursal
+EXEC supermercado.insertarSucursal 'stefen', 
+	'Liniers',
+	'Juan Manuel de Rosas Av. 1234' ,
+	'L a V 8 a. m. – 9 p. m. S y D 9 a. m. – 8 p. m.',
+	'123-484-4132';
+GO
+---empleado
+EXEC supermercado.insertarEmpleado
+    @legajo = 300000,                     
+    @nombre = 'Juan',                  
+    @apellido = 'Perez',               
+    @dni = '90951164',                 
+    @direccion = 'Calle Falsa 123',    
+    @email_personal = 'GLUCK@gmail.com',  
+    @email_empresa = 'GLICK.perez@superA.com', 
+    @cargo = 'Cajero',                   
+    @idSucursal = 1,                    
+    @turno = 'TM',                  
+    @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.';    
+go
+---linea de producto
+EXEC catalogo.insertarLinea_de_producto @nombre = 'Almacen',@categoría = 'ropa';
+GO
+---insertar producto concrecto 
+exec catalogo.insertarProducto 'remera',10.0,1;
+GO
+---insercion de medio pago
+EXEC ventas.insertarMedioDePago 'Pago Generico';
+GO
+--insercion de la venta
 DECLARE @productosDetalle ventas.TipoProductosDetalle;
 INSERT INTO @productosDetalle (idProducto, cantidad)
-VALUES (6529, 2)   
+VALUES
+    (1,5) 
 
--- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
 EXEC ventas.generar_venta_con_factura
-    @nroFactura = '750-67-8425',    -- Número de factura de ejemplo
+    @nroFactura = '750-67-8415',    -- Número de factura de ejemplo
     @tipoFactura = 'A',             -- Tipo de factura (A o B, dependiendo de la configuración)
-    @fecha = '14/11/2024',          -- Fecha de la venta
-    @hora = '13:08:00',             -- Hora de la venta
-    @idMedioDePago = 1,             -- ID del medio de pago (puede ser un ID válido de la tabla mediosDePago)
-    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
-    @idEmpleado = 257020,              -- ID del empleado (debe ser un ID válido de la tabla empleados)
-    @idSucursal = 3,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
-    @tipoCliente = 'Normal',       -- Tipo de cliente (ejemplo: 'Regular', 'Nuevo', etc.)
-    @genero = 'Male',          -- Género del cliente
-    @cuil = '20-12345678-7',        -- CUIL del cliente (dato ficticio)
-    @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
-go
-
-EXEC ventas.reporte_producto_vendido_rango_fecha @FechaIni = '2024-11-14', @FechaFinal = '2024-11-20';
-go
-
-
-
-
-
-
-
-select * from ventas.vista_de_registros_de_ventas;
-
-
-
-
-
---------------------------------------------------------------------------
---TEST DE SEGURIDAD   entrega 5
---------------------------------------------------------------------------
-
---------------mostrar incriptados de la tabla empleados
-select * from supermercado.empleado;
---------------mostrar los empleados desencriptados 
-EXEC supermercado.mostrarEmpleadosDesencriptados 
-    @FraseClave = 'La vida es como la RAM, todo es temporal y nada se queda.';
-go
-
-
-
-
----------------------------------------------------------------------
----------------------------------logins , usuarios y roles 
----------------------------------------------------------------------
-
-
-use COM5600G02;
-use master
---------------demostrar que solo el supervisor puede hacer las notas de credito  (FALTA HACER )
-go
-
---------primero ejecutamos con cajero
-EXECUTE AS LOGIN = 'cajero1';						
-SELECT CURRENT_USER;
-
-
-----ver lo productos que tengo
-select * from catalogo.vista_Producto_Resumen;
-
-DECLARE @productosDetalle ventas.TipoProductosDetalle;
-INSERT INTO @productosDetalle (idProducto, cantidad)
-VALUES (6520, 5)   
-
--- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
-EXEC ventas.generar_venta_con_factura
-    @nroFactura = '750-67-2026',    -- Número de factura 
-    @tipoFactura = 'A',             -- Tipo de factura
-    @fecha = '14/11/2024',          -- Fecha de la venta
+    @fecha = '1/5/2019',			-- Fecha de la venta
     @hora = '13:08:00',             -- Hora de la venta
     @idMedioDePago = 1,             -- ID del medio de pago 
-    @idPago = 'PAGO123456',         -- ID del pago
-    @idEmpleado = 257020,              -- ID del empleado
-    @idSucursal = 3,                -- ID de la sucursal 
-    @tipoCliente = 'Normal',       -- Tipo de cliente 
-    @genero = 'Male',          -- Género del cliente
-    @cuil = '20-12345678-7',        -- CUIL del cliente 
-    @productosDetalle = @productosDetalle; 
-go
-
-select * from ventas.vista_de_registros_de_ventas where ID_Factura = '750-67-2026';
-
-REVERT;		
-
-
------------Luego lo probamos con un supervisor 
-EXECUTE AS LOGIN = 'supervisor1';						
-SELECT CURRENT_USER;
-
-DECLARE @productosDetalle ventas.TipoProductosDetalle;
-INSERT INTO @productosDetalle (idProducto, cantidad)
-VALUES (6528, 1)   
-
--- Ahora, llamamos al procedimiento almacenado ventas.generar_venta_con_factura con los siguientes parámetros
-EXEC ventas.generar_venta_con_factura
-    @nroFactura = '750-67-8426',    
-    @tipoFactura = 'A',             
-    @fecha = '14/11/2024',          
-    @hora = '13:08:00',            
-    @idMedioDePago = 1,             
-    @idPago = 'PAGO123456',         
-    @idEmpleado = 257020,              
-    @idSucursal = 3,               
-    @tipoCliente = 'Normal',       -
-    @genero = 'Male',          
-    @cuil = '20-12345678-7',       
+    @idPago = 'PAGO123456',         -- ID del pago (número de transacción o similar)
+    @idEmpleado = 300000,           -- ID del empleado (debe ser un ID válido de la tabla empleados)
+    @idSucursal = 1,                -- ID de la sucursal (debe ser un ID válido de la tabla sucursal)
+    @tipoCliente = 'Normal',		-- Tipo de cliente 
+    @genero = 'Male',				-- Género del cliente
+    @cuil = '20-12345678-9',        -- CUIL del cliente 
     @productosDetalle = @productosDetalle; -- Detalles de los productos a insertar
 go
-
-select * from ventas.vista_de_registros_de_ventas where ID_Factura = '750-67-8426';
-
-REVERT;		
-
-
-
-
-
-
-
-
---------------demostrar que solo el supervisor puede hacer las notas de credito 
-
-select * from ventas.detalleVenta order by idFactura desc;	--mostrar los detalles de ventas a borrar
-
-select * from ventas.vista_de_registros_de_ventas;
-
------este es un supervisor
-EXECUTE AS LOGIN = 'supervisor1';						--este es un supervisor
-SELECT CURRENT_USER;										-- Muestra el actual login
-exec ventas.insertarNotaDeCredito 1000,5196,'devProd';		--le tiene que dar los permisos
-REVERT;														--vuelve al login anterior, es decir, al de windows
-
-select * from ventas.vista_de_notas_de_credito;
-
------este es un gerente
-EXECUTE AS LOGIN = 'gerente1';
-SELECT CURRENT_USER;				-- Muestra el actual login
-exec ventas.insertarNotaDeCredito 1000,5196,'devProd';	
-REVERT;			
-
-
-
-
-
-
-
---------------demostrar que solo el gerente puede hacer los reportes 
-
------este es un gerente
-EXECUTE AS LOGIN = 'gerente1';
-SELECT CURRENT_USER;				-- Muestra el actual login
-exec ventas.reporte_productos_menos_vendidos_mes 1, 2019;
-REVERT;								--vuelve al login anterior, es decir, al de windows
-
------este es un supervisor
-EXECUTE AS LOGIN = 'supervisor1';
-SELECT CURRENT_USER;				-- Muestra el actual login
-exec ventas.reporte_productos_menos_vendidos_mes 1, 2019;
-REVERT;		
-
-
-
-
-
-
-
-
-
-
-
----------------- ver roles de la DB y usuarios asignados
-use COM5600G02;
-SELECT    roles.principal_id                            AS RolePrincipalID
-    ,    roles.name                                    AS RolePrincipalName
-    ,    database_role_members.member_principal_id    AS MemberPrincipalID
-    ,    members.name                                AS MemberPrincipalName
-FROM sys.database_role_members AS database_role_members  
-JOIN sys.database_principals AS roles  
-    ON database_role_members.role_principal_id = roles.principal_id  
-JOIN sys.database_principals AS members  
-    ON database_role_members.member_principal_id = members.principal_id;  
-GO
-
--------- ver permisos dados a los roles 
-SELECT
-    perms.state_desc AS State,
-    permission_name AS [Permission],
-    obj.name AS [on Object],
-    dp.name AS [to User Name]
-FROM sys.database_permissions AS perms
-JOIN sys.database_principals AS dp
-    ON perms.grantee_principal_id = dp.principal_id
-JOIN sys.objects AS obj
-    ON perms.major_id = obj.object_id;
-
-
-
------------la prueba de back-up esta en otro archivo
-
-
+--se muestra que los datos estan en la tablas de registro de ventas y detalle de venta
+select * from ventas.registro_de_ventas;
+select * from ventas.detalleVenta;

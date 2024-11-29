@@ -49,6 +49,9 @@
 use COM5600G02;
 go
 
+ --------------------------------------------------------------------------------------------------------
+  --Creamos vista para los productos 
+ --------------------------------------------------------------------------------------------------------
 
 
 CREATE or ALTER VIEW catalogo.vista_Producto_Resumen AS
@@ -67,6 +70,7 @@ GO
 
 CREATE or ALTER VIEW ventas.vista_de_registros_de_ventas AS
 SELECT  
+	f.id as id_nro_factura,
     f.nroFactura as ID_Factura, 
     f.tipo_Factura as Tipo_de_factura, 
     f.fecha as Fecha, 
@@ -74,6 +78,7 @@ SELECT
     mp.nombre as Medio_de_pago,
 	f.idPago as identificadorDePago,
 	s.idComercio as CuitEmpresa,
+	p.id as id_producto,
 	p.nombre as Producto,
 	lp.nombre as Linea_de_Producto,
 	d.precio as Precio_unitario,
@@ -103,12 +108,83 @@ JOIN
 JOIN 
 	ventas.mediosDePago mp ON f.idMedio_de_pago = mp.id
 LEFT JOIN
-	ventas.cliente c ON v.idCliente = c.id;
+	ventas.cliente c ON v.idCliente = c.id
+WHERE
+	f.activo = 1;
+
 go
 
 
 
+ --------------------------------------------------------------------------------------------------------
+  --Creamos vista para registros para facilicitar la vista al supervirsor asignado
+ --------------------------------------------------------------------------------------------------------
+CREATE OR ALTER PROCEDURE ventas.mostrar_factura_segun_supervisor
+	@legajoSupervisor INT
+AS
+BEGIN
 
+	declare @idSucursalObjetivo int;
+	set @idSucursalObjetivo = (SELECT e.idSucursal FROM supermercado.empleado e where e.legajo=@legajoSupervisor);
+	
+	SELECT  
+		f.id as id_nro_factura,
+		f.nroFactura as ID_Factura, 
+		f.tipo_Factura as Tipo_de_factura, 
+		f.fecha as Fecha, 
+		f.hora as Hora, 
+		mp.nombre as Medio_de_pago,
+		f.idPago as identificadorDePago,
+		s.idComercio as CuitEmpresa,
+		p.id as id_producto,
+		p.nombre as Producto,
+		lp.nombre as Linea_de_Producto,
+		d.precio as Precio_unitario,
+		d.cant as Cantidad, 
+		d.subtotal,
+		f.total as Total,
+		f.totalConIva as ConIva,
+		c.cuil as idCliente,
+		c.tipo_cliente as Tipo_de_cliente, 
+		c.genero as Genero,
+		v.idEmpleado as Empleado,
+		s.localidad as Sucursal
+	FROM 
+		ventas.factura f 
+	JOIN 
+		ventas.detalleVenta d ON f.id = d.idFactura
+	JOIN 
+		ventas.registro_de_ventas v ON f.id = v.idFactura 
+	JOIN 
+		supermercado.sucursal s ON v.idSucursal = s.id
+	JOIN 
+		supermercado.empleado e ON v.idEmpleado = e.legajo
+	JOIN
+		catalogo.producto p ON d.idProducto = p.id
+	JOIN
+		catalogo.linea_de_producto lp ON p.id_linea = lp.id
+	JOIN 
+		ventas.mediosDePago mp ON f.idMedio_de_pago = mp.id
+	LEFT JOIN
+		ventas.cliente c ON v.idCliente = c.id
+	WHERE
+		s.id = @idSucursalObjetivo;
+
+END
+go
+
+
+
+ --------------------------------------------------------------------------------------------------------
+  --Creamos vista para registros de ventas
+ --------------------------------------------------------------------------------------------------------
+CREATE OR ALTER PROCEDURE ventas.mostrar_ventas_por_cajero
+	@legajoEmpleado INT
+AS
+BEGIN
+	SELECT * FROM ventas.vista_de_registros_de_ventas where Empleado=@legajoEmpleado;
+END 
+go
  --------------------------------------------------------------------------------------------------------
   --Creamos SP para insertar la nota de crédito
  --------------------------------------------------------------------------------------------------------
@@ -315,6 +391,7 @@ BEGIN
         WHERE 
             MONTH(f.fecha) = @mes
             AND YEAR(f.fecha) = @anio
+			AND f.activo = 1
         GROUP BY 
             DATENAME(weekday, f.fecha), DATEPART(weekday, f.fecha)
     )
@@ -378,6 +455,7 @@ BEGIN
     JOIN supermercado.empleado e ON vr.idEmpleado = e.legajo
     WHERE f.fecha BETWEEN @FechaInicio AND @FechaFin
       AND f.estadoDePago = 'pagada'
+	  AND f.activo = 1
     GROUP BY MONTH(f.fecha), e.turno, DATENAME(MONTH, f.fecha)
 	)
 	SELECT Mes, Turno, MesNombre, Facturacion, 
@@ -410,7 +488,8 @@ BEGIN
     LEFT JOIN ventas.notasDeCredito nc ON nc.idDetalleVenta = d.id
     WHERE f.fecha BETWEEN @FechaIni AND @FechaFinal
     AND (nc.id IS NULL OR nc.razon != 'devPago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
-    GROUP BY p.nombre
+    AND f.activo = 1
+	GROUP BY p.nombre
     ORDER BY CantidadVendida DESC
     FOR XML PATH('Producto'), ROOT('ReporteProductosVendidos');
 END
@@ -441,7 +520,8 @@ BEGIN
     LEFT JOIN ventas.notasDeCredito nc ON nc.idDetalleVenta = d.id
     WHERE f.fecha BETWEEN @FechaIni AND @FechaFinal
     AND (nc.id IS NULL OR nc.razon != 'devPago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
-    GROUP BY s.localidad, p.nombre
+    AND f.activo = 1
+	GROUP BY s.localidad, p.nombre
     ORDER BY CantidadVendida DESC
     FOR XML PATH('Venta'), ROOT('ReporteProductosVendidosPorSucursal');
 END
@@ -469,7 +549,8 @@ BEGIN
         JOIN catalogo.producto p ON d.idProducto = p.id
         WHERE MONTH(f.fecha) = @Mes
           AND YEAR(f.fecha) = @Anio
-        GROUP BY p.nombre, DATEPART(WEEK, f.fecha)
+		  AND f.activo = 1
+		GROUP BY p.nombre, DATEPART(WEEK, f.fecha)
     )
     SELECT 
         Producto,
@@ -502,6 +583,7 @@ BEGIN
     JOIN catalogo.producto p ON d.idProducto = p.id
     WHERE MONTH(f.fecha) = @Mes
       AND YEAR(f.fecha) = @Anio
+	  AND f.activo = 1
     GROUP BY p.nombre
     ORDER BY CantidadVendida ASC  -- Ordenar de menor a mayor cantidad vendida
     FOR XML PATH('Producto'), ROOT('ReporteProductosMenosVendidos');
@@ -538,6 +620,7 @@ BEGIN
         AND (nc.id IS NULL OR nc.razon != 'devolución de pago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
         WHERE f.fecha <= @Fecha
           AND r.idSucursal = @SucursalID  -- Filtro por sucursal
+		  AND f.activo = 1
         GROUP BY p.nombre, f.totalConIva
     ),
     TotalVentasAcumulado AS (
@@ -557,6 +640,59 @@ BEGIN
     FOR XML PATH('Venta'), ROOT('ReporteVentasPorSucursal');
 END
 GO
+
+
+
+--------------------------------------------------------------------------------------------------------
+-- ACUMULADO TOTAL DE LAS VENTAS DE UNA FECHA ESPECIFICA 
+--------------------------------------------------------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE ventas.reporte_total_acumulado_ventas_dado_fecha
+    @Fecha DATE,
+    @SucursalID INT
+AS
+BEGIN
+	-- Declarar una variable para almacenar el valor de la divisa
+    DECLARE @ValorDivisa DECIMAL(8, 2);
+
+    -- Llamar al procedimiento supermercado.obtenerValorDivisa para obtener el valor de la divisa
+    EXEC supermercado.obtenerValorDivisa @ValorDivisa OUTPUT;
+
+    ;WITH VentasPorProducto AS (
+        SELECT 
+            p.nombre AS Producto,               -- Nombre del producto
+            SUM(d.cant) AS CantidadVendida,     -- Total de productos vendidos
+            f.totalConIva AS TotalVenta -- Total de ventas por producto
+        FROM ventas.detalleVenta d
+        JOIN ventas.factura f ON d.idFactura = f.id
+        JOIN catalogo.producto p ON d.idProducto = p.id
+        JOIN ventas.registro_de_ventas r ON d.idFactura = r.idFactura
+        LEFT JOIN ventas.notasDeCredito nc ON nc.idDetalleVenta = d.id
+        AND (nc.id IS NULL OR nc.razon != 'devolución de pago')  -- Excluir productos con notas de crédito con razón "devolución de pago"
+        WHERE f.fecha = @Fecha
+          AND r.idSucursal = @SucursalID  -- Filtro por sucursal
+		  AND f.activo = 1
+        GROUP BY p.nombre, f.totalConIva
+    ),
+    TotalVentasAcumulado AS (
+        SELECT SUM(TotalVenta) AS TotalVentas
+        FROM VentasPorProducto
+    )
+    SELECT 
+        vp.Producto AS 'Producto',               -- Nombre del producto
+        vp.CantidadVendida AS 'CantidadVendida',  -- Total de productos vendidos
+        vp.TotalVenta AS 'TotalVenta',           -- Total de ventas por producto
+		(vp.TotalVenta * @ValorDivisa) AS EnPesosArgentinos,
+        ta.TotalVentas AS 'AcumuladoTotalVentas', -- Total acumulado de todas las ventas
+		(TotalVentas * @ValorDivisa) AS TotalEnPesosArgentinos
+    FROM VentasPorProducto vp
+    CROSS JOIN TotalVentasAcumulado ta
+    ORDER BY vp.TotalVenta DESC
+    FOR XML PATH('Venta'), ROOT('ReporteVentasPorSucursal');
+END
+GO
+
+
 
 
 ---------------------------------------------------------------------------------------
@@ -603,7 +739,7 @@ go
 
 
 --------------------------------------------------------------------------------------------------------
--- REPORTE DE VENTAS 
+-- REPORTE DE VENTAS , VISTA
 --------------------------------------------------------------------------------------------------------
 
 CREATE or ALTER VIEW ventas.reporte_de_ventas AS
@@ -639,11 +775,24 @@ JOIN
 JOIN 
 	ventas.mediosDePago mp ON f.idMedio_de_pago = mp.id
 LEFT JOIN
-	ventas.cliente c ON v.idCliente = c.id;
+	ventas.cliente c ON v.idCliente = c.id
+WHERE
+	f.activo = 1;
 go
 
 
+--------------------------------------------------------------------------------------------------------
+-- REPORTE DE VENTAS , EN XML
+--------------------------------------------------------------------------------------------------------
 
+CREATE OR ALTER PROCEDURE ventas.generar_reporte_ventas_xml
+AS
+BEGIN
+    SELECT * FROM ventas.reporte_de_ventas
+    FOR XML PATH('Venta'), ROOT('ReporteVentas');
+END;
+
+GO
 --------------------------------------------------------------------------------------------------------
 -- SPs PARA EL DBA
 --------------------------------------------------------------------------------------------------------
@@ -692,12 +841,6 @@ BEGIN
         email_personal = EncryptByPassPhrase(@FraseClaveNueva, CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClaveVieja, email_personal))),
         email_empresa = EncryptByPassPhrase(@FraseClaveNueva, CONVERT(NVARCHAR(256), DecryptByPassPhrase(@FraseClaveVieja, email_empresa)));
 END;
-GO
-
-
-
-ALTER TABLE supermercado.empleado
-ADD usuario VARCHAR(50);
 GO
 
 
